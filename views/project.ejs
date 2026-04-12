@@ -249,13 +249,13 @@
       </div>
     </div>
   </section>
-  <script src="https://js.arcgis.com/4.29/"></script>
   <script>
-    require([
-      "esri/Map",
-      "esri/views/MapView",
-      "esri/layers/FeatureLayer"
-    ], function(Map, MapView, FeatureLayer) {
+    function initArcGISMap() {
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer"
+      ], function(Map, MapView, FeatureLayer) {
       const serviceUrl = "<%= project.arcgisMap.featureServerUrl %>";
 
       const map = new Map({ basemap: "dark-gray-vector" });
@@ -331,6 +331,13 @@
 
       map.addMany([routesLayer, storesLayer, facilitiesLayer]);
     });
+    }
+    (function loadArcGIS() {
+      var s = document.createElement('script');
+      s.src = 'https://js.arcgis.com/4.29/';
+      s.onload = initArcGISMap;
+      document.head.appendChild(s);
+    })();
   </script>
   <% } %>
 

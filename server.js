@@ -16,12 +16,13 @@ app.use((req, res, next) => {
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   res.setHeader('Content-Security-Policy',
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' https://js.arcgis.com https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.arcgis.com https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; " +
     "style-src 'self' 'unsafe-inline' https://api.fontshare.com https://js.arcgis.com https://cdn.jsdelivr.net https://netdna.bootstrapcdn.com https://cdnjs.cloudflare.com; " +
     "font-src 'self' https://cdn.fontshare.com https://cdn.jsdelivr.net https://netdna.bootstrapcdn.com https://cdnjs.cloudflare.com; " +
-    "img-src 'self' data: https://tile.openstreetmap.org https://*.arcgisonline.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
+    "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.arcgisonline.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
     "media-src 'self'; " +
     "connect-src 'self' https://services1.arcgis.com https://js.arcgis.com https://*.arcgisonline.com; " +
+    "worker-src 'self' blob:; " +
     "frame-src 'self'; " +
     "object-src 'self';"
   );

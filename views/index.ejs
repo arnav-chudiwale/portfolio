@@ -1,0 +1,269 @@
+<%- include('partials/head') %>
+<body>
+  <%- include('partials/nav') %>
+
+  <!-- HERO -->
+  <section class="hero">
+    <video class="hero__video" autoplay muted loop playsinline>
+      <source src="/videos/mumbai.mp4" type="video/mp4">
+    </video>
+    <div class="hero__overlay"></div>
+    <div class="container hero__container">
+      <h1 class="hero__name">Arnav Chudiwale</h1>
+      <p class="hero__headline">I turn messy ops into clean math.</p>
+      <p class="hero__tagline">MS Industrial Engineering @ Oklahoma State University. I build optimization models, supply chain simulations, and data pipelines that drive real decisions.</p>
+      <div class="hero__actions">
+        <a href="#projects" class="btn btn--gold">View Projects</a>
+        <a href="/resume" class="btn btn--outline">Download Resume</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="section section--light" id="projects">
+    <div class="container">
+      <h2 class="section__title">Projects</h2>
+      <p class="section__subtitle">Case studies in optimization, machine learning, and operations research</p>
+    </div>
+    <div class="projects-scroll" id="projectsScroll">
+      <div class="projects-scroll__track" id="projectsTrack">
+        <% const completedProjects = projects.filter(p => p.tag === 'Completed'); %>
+        <% const timelineDates = [ 'Jan 2026', 'Dec 2025', 'Oct 2025' ]; %>
+        <% completedProjects.forEach((p, i) => { %>
+        <div class="projects-scroll__dot" data-index="<%= i %>">
+          <span class="projects-scroll__date"><%= timelineDates[i] || p.date %></span>
+          <span class="projects-scroll__circle"></span>
+        </div>
+        <% }) %>
+      </div>
+      <div class="projects-scroll__cards" id="projectsCards">
+        <% completedProjects.forEach((p, i) => { %>
+        <div class="projects-scroll__card fade-up" data-index="<%= i %>">
+          <a href="/project/<%= p.slug %>" class="project-card project-card--full">
+            <% if (p.cardImage) { %>
+            <div class="project-card__image">
+              <img src="<%= p.cardImage %>" alt="<%= p.title %>" loading="lazy">
+            </div>
+            <% } else if (p.hero) { %>
+            <div class="project-card__image">
+              <% if (p.hero.endsWith('.svg')) { %>
+                <img src="<%= p.hero %>" alt="<%= p.title %>" loading="lazy" style="object-fit: contain; background: #0A1628;">
+              <% } else { %>
+                <img src="<%= p.hero %>" alt="<%= p.title %>" loading="lazy">
+              <% } %>
+            </div>
+            <% } %>
+            <div class="project-card__content">
+              <div class="project-card__tags">
+                <span class="tag tag--gold"><%= p.tag %></span>
+                <span class="tag tag--muted"><%= timelineDates[i] || p.date %></span>
+              </div>
+              <h3 class="project-card__title"><%= p.title %></h3>
+              <% if (p.cardIntro) { %>
+              <p class="project-card__intro"><%= p.cardIntro %></p>
+              <% } else { %>
+              <p class="project-card__desc"><%= p.oneLiner %></p>
+              <% } %>
+            </div>
+          </a>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS IN PROGRESS -->
+  <section class="section section--light" id="projects-wip">
+    <div class="container">
+      <h2 class="section__title">Projects In-Progress</h2>
+      <p class="section__subtitle">Currently building — check back for updates</p>
+    </div>
+    <div class="projects-scroll" id="wipScroll">
+      <div class="projects-scroll__track" id="wipTrack">
+        <% const wipProjects = projects.filter(p => p.tag === 'In Progress'); %>
+        <% wipProjects.forEach((p, i) => { %>
+        <div class="projects-scroll__dot" data-index="<%= i %>">
+          <span class="projects-scroll__date">April 2026</span>
+          <span class="projects-scroll__circle"></span>
+        </div>
+        <% }) %>
+      </div>
+      <div class="projects-scroll__cards" id="wipCards">
+        <% wipProjects.forEach((p, i) => { %>
+        <div class="projects-scroll__card fade-up" data-index="<%= i %>">
+          <a href="/project/<%= p.slug %>" class="project-card project-card--full">
+            <% if (p.cardImage) { %>
+            <div class="project-card__image">
+              <img src="<%= p.cardImage %>" alt="<%= p.title %>" loading="lazy">
+            </div>
+            <% } else if (p.hero) { %>
+            <div class="project-card__image">
+              <% if (p.hero.endsWith('.svg')) { %>
+                <img src="<%= p.hero %>" alt="<%= p.title %>" loading="lazy" style="object-fit: contain; background: #0A1628;">
+              <% } else { %>
+                <img src="<%= p.hero %>" alt="<%= p.title %>" loading="lazy">
+              <% } %>
+            </div>
+            <% } %>
+            <div class="project-card__content">
+              <div class="project-card__tags">
+                <span class="tag tag--outline"><%= p.tag %></span>
+                <span class="tag tag--muted">April 2026</span>
+              </div>
+              <h3 class="project-card__title"><%= p.title %></h3>
+              <% if (p.cardIntro) { %>
+              <p class="project-card__intro"><%= p.cardIntro %></p>
+              <% } else { %>
+              <p class="project-card__desc"><%= p.oneLiner %></p>
+              <% } %>
+            </div>
+          </a>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section class="section section--navy" id="skills">
+    <div class="container">
+      <h2 class="section__title section__title--light">Technical Skills</h2>
+      <div class="skills-grid">
+        <div class="skill-group fade-up">
+          <h3 class="skill-group__title">Optimization &amp; Modeling</h3>
+          <div class="skill-group__pills">
+            <span class="pill">Gurobi Optimizer</span>
+            <span class="pill">Google OR-Tools</span>
+            <span class="pill">PuLP</span>
+            <span class="pill">Network Optimization</span>
+            <span class="pill">Mixed-Integer Programming</span>
+          </div>
+        </div>
+        <div class="skill-group fade-up">
+          <h3 class="skill-group__title">Simulation</h3>
+          <div class="skill-group__pills">
+            <span class="pill">Simio</span>
+            <span class="pill">SimPy</span>
+            <span class="pill">Monte Carlo</span>
+            <span class="pill">Discrete-Event Simulation</span>
+          </div>
+        </div>
+        <div class="skill-group fade-up">
+          <h3 class="skill-group__title">Data &amp; Machine Learning</h3>
+          <div class="skill-group__pills">
+            <span class="pill">Python</span>
+            <span class="pill">LightGBM</span>
+            <span class="pill">Scikit-Learn</span>
+            <span class="pill">Pandas</span>
+            <span class="pill">NumPy</span>
+          </div>
+        </div>
+        <div class="skill-group fade-up">
+          <h3 class="skill-group__title">Visualization &amp; GIS</h3>
+          <div class="skill-group__pills">
+            <span class="pill">Power BI</span>
+            <span class="pill">Tableau</span>
+            <span class="pill">ArcGIS Pro</span>
+            <span class="pill">Plotly</span>
+            <span class="pill">Matplotlib</span>
+          </div>
+        </div>
+        <div class="skill-group fade-up">
+          <h3 class="skill-group__title">Cloud &amp; Web</h3>
+          <div class="skill-group__pills">
+            <span class="pill">Azure Cloud</span>
+            <span class="pill">Azure OpenAI</span>
+            <span class="pill">Flask</span>
+            <span class="pill">Node.js</span>
+            <span class="pill">DynamoDB</span>
+          </div>
+        </div>
+        <div class="skill-group fade-up">
+          <h3 class="skill-group__title">Analytics</h3>
+          <div class="skill-group__pills">
+            <span class="pill">SQL</span>
+            <span class="pill">R</span>
+            <span class="pill">Excel (VBA, Solver)</span>
+            <span class="pill">Power Query</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section section--light" id="about">
+    <div class="container">
+      <h2 class="section__title">About</h2>
+      <div class="about-grid">
+        <div class="about__text fade-up">
+          <p class="about__lead">I translate business constraints into mathematical models that deliver measurable operational improvements.</p>
+          <p>Currently pursuing my <strong>MS in Industrial Engineering &amp; Management at Oklahoma State University</strong> (expected Dec 2026), with coursework spanning operations research, network optimization, stochastic processes, discrete-event simulation, and supply chain strategy.</p>
+          <p>Prior to grad school, I worked at <strong>Ernst &amp; Young (EY)</strong> supporting deployment planning for a statewide GenAI-based crop advisory platform serving 2M+ farmers for the Indian Government's Department of Agriculture.</p>
+          <p>My engineering foundation is a <strong>BE in Electrical &amp; Computer Engineering from Thapar Institute of Technology</strong>, India.</p>
+        </div>
+        <div class="about__education fade-up">
+          <div class="edu-card">
+            <div class="edu-card__row">
+              <img src="/images/about/osu.png" alt="Oklahoma State University" class="edu-card__img">
+              <div class="edu-card__info">
+                <h4>Oklahoma State University</h4>
+                <p>MS Industrial Engineering &amp; Management</p>
+                <p class="edu-card__date">Jan 2025 – Dec 2026</p>
+              </div>
+            </div>
+          </div>
+          <div class="edu-card">
+            <div class="edu-card__row">
+              <img src="/images/about/ey.png" alt="Ernst & Young" class="edu-card__img">
+              <div class="edu-card__info">
+                <h4>Ernst &amp; Young (EY)</h4>
+                <p>AI Operations &amp; Feasibility Analysis</p>
+                <p class="edu-card__date">Jan 2024 – Jun 2024</p>
+              </div>
+            </div>
+          </div>
+          <div class="edu-card">
+            <div class="edu-card__row">
+              <img src="/images/about/thapar.jpg" alt="Thapar Institute of Technology" class="edu-card__img">
+              <div class="edu-card__info">
+                <h4>Thapar Institute of Technology</h4>
+                <p>BE Electrical &amp; Computer Engineering</p>
+                <p class="edu-card__date">Nov 2020 – Nov 2024</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="section section--navy" id="contact">
+    <div class="container contact">
+      <h2 class="section__title section__title--light">Let&rsquo;s Connect</h2>
+      <p class="contact__subtitle">Interested in operations research, supply chain analytics, or optimization? I&rsquo;d love to hear from you.</p>
+      <div class="contact__links">
+        <a href="mailto:arnav.chudiwale@okstate.edu" class="contact__card fade-up">
+          <span class="contact__icon">&#9993;</span>
+          <span class="contact__label">Email</span>
+          <span class="contact__value">arnav.chudiwale@okstate.edu</span>
+        </a>
+        <a href="https://linkedin.com/in/arnav-chudiwale" target="_blank" rel="noopener" class="contact__card fade-up">
+          <span class="contact__icon">&#128279;</span>
+          <span class="contact__label">LinkedIn</span>
+          <span class="contact__value">arnav-chudiwale</span>
+        </a>
+        <a href="https://github.com/arnav-chudiwale" target="_blank" rel="noopener" class="contact__card fade-up">
+          <span class="contact__icon">&#128187;</span>
+          <span class="contact__label">GitHub</span>
+          <span class="contact__value">arnav-chudiwale</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <%- include('partials/footer') %>
+  <script src="/js/main.js"></script>
+</body>
+</html>

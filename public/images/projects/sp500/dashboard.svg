@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#0A1628"/>
+  <defs>
+    <linearGradient id="g3" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#C8A951" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0A1628" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#g3)"/>
+  <rect x="60" y="60" width="680" height="380" rx="12" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <rect x="60" y="60" width="680" height="44" rx="12" fill="rgba(255,255,255,0.05)"/>
+  <text x="90" y="87" fill="#C8A951" font-size="14" font-family="sans-serif" font-weight="700">ML Risk-Aware Portfolio</text>
+  <circle cx="700" cy="82" r="4" fill="#4ade80" opacity="0.6"/>
+  <polyline points="100,350 150,330 200,340 250,280 300,290 350,250 400,220 450,230 500,190 550,200 600,170 650,160 700,140" fill="none" stroke="#C8A951" stroke-width="2" opacity="0.7"/>
+  <polyline points="100,350 150,345 200,340 250,320 300,310 350,300 400,295 450,290 500,280 550,275 600,265 650,260 700,250" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <line x1="500" y1="124" x2="530" y2="124" stroke="#C8A951" stroke-width="2"/>
+  <text x="535" y="128" fill="rgba(255,255,255,0.5)" font-size="10" font-family="sans-serif">ML Risk-Adjusted</text>
+  <line x1="640" y1="124" x2="670" y2="124" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="675" y="128" fill="rgba(255,255,255,0.4)" font-size="10" font-family="sans-serif">Equal Wt</text>
+  <rect x="100" y="380" width="140" height="40" rx="6" fill="rgba(200,169,81,0.1)" stroke="rgba(200,169,81,0.2)" stroke-width="1"/>
+  <text x="115" y="396" fill="rgba(255,255,255,0.4)" font-size="9" font-family="sans-serif">SHARPE RATIO</text>
+  <text x="115" y="412" fill="#C8A951" font-size="14" font-family="sans-serif" font-weight="700">1.842</text>
+  <rect x="260" y="380" width="140" height="40" rx="6" fill="rgba(200,169,81,0.1)" stroke="rgba(200,169,81,0.2)" stroke-width="1"/>
+  <text x="275" y="396" fill="rgba(255,255,255,0.4)" font-size="9" font-family="sans-serif">MAX DRAWDOWN</text>
+  <text x="275" y="412" fill="#C8A951" font-size="14" font-family="sans-serif" font-weight="700">-3.2%</text>
+  <rect x="420" y="380" width="140" height="40" rx="6" fill="rgba(200,169,81,0.1)" stroke="rgba(200,169,81,0.2)" stroke-width="1"/>
+  <text x="435" y="396" fill="rgba(255,255,255,0.4)" font-size="9" font-family="sans-serif">VOLATILITY</text>
+  <text x="435" y="412" fill="#C8A951" font-size="14" font-family="sans-serif" font-weight="700">12.4%</text>
+  <rect x="580" y="380" width="140" height="40" rx="6" fill="rgba(200,169,81,0.1)" stroke="rgba(200,169,81,0.2)" stroke-width="1"/>
+  <text x="595" y="396" fill="rgba(255,255,255,0.4)" font-size="9" font-family="sans-serif">FEATURES</text>
+  <text x="595" y="412" fill="#C8A951" font-size="14" font-family="sans-serif" font-weight="700">100+</text>
+  <text x="400" y="474" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="13" font-family="sans-serif" letter-spacing="0.15em">ML RISK-AWARE PORTFOLIO OPTIMIZATION</text>
+</svg>

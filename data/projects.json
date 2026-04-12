@@ -1,0 +1,435 @@
+[
+  {
+    "slug": "circular-supply-chain",
+    "title": "Circular Supply Chain Network Optimization",
+    "subtitle": "Reverse Logistics & Refurbishment for Electronics",
+    "tag": "Completed",
+    "date": "Jan 2026",
+    "heroVideo": "/videos/repair.mp4",
+    "arcgisMap": {
+      "featureServerUrl": "https://services1.arcgis.com/jWQlP64OuwDh6GGX/arcgis/rest/services/Circular_Supply_Chain_Network_Solution/FeatureServer",
+      "title": "Network Design — ArcGIS Location-Allocation Analysis",
+      "description": "This map represents the initial geographic optimization phase. Using ArcGIS Network Analyst's location-allocation solver on California's real road network, I evaluated 5 candidate refurbishment sites against 54 Apple Store demand points to find the distance-optimal facility placement. Store markers are scaled by annual return volume (330–900 units), and route lines show the minimum-impedance assignments. This geographic baseline then fed into Gurobi MIP modeling for total cost optimization — incorporating fixed facility costs, variable processing costs, and multi-year NPV analysis — to arrive at the final 2-facility recommendation (Fresno + Reno)."
+    },
+    "oneLiner": "Converted 28,000 annual smartphone returns from a disposal cost into a $7.95M profit center through optimized facility placement.",
+    "cardImage": "/images/projects/e-waste.jpg",
+    "cardIntro": "What happens to returned smartphones? Most people assume they get refurbished and resold. The reality? They sit in warehouse bins for 60+ days, then get sold in bulk to recyclers for $22/device. I built a network optimization model to fix this.",
+    "hero": "/images/projects/supply-chain/financial_cash_flow_model.png",
+    "metrics": [
+      { "value": "$7.95M", "label": "3-Year NPV" },
+      { "value": "447%", "label": "ROI" },
+      { "value": "7 mo", "label": "Payback Period" }
+    ],
+    "problem": {
+      "heading": "The Problem",
+      "bullets": [
+        "A premium electronics retailer (modeled on Apple's California retail footprint) has <strong>55 store locations</strong> across the state, generating approximately <strong>28,140 smartphone returns per year</strong> based on a 7–8% return rate.",
+        "Under the current process, all returned devices — regardless of condition — are <strong>held in warehouse bins for 60+ days</strong>, then bulk-sold to a third-party recycler at a flat rate of <strong>$22 per unit</strong>. Total annual recovery: just <strong>$619K</strong>.",
+        "There is <strong>no sorting, no grading, and no value differentiation</strong>. A device in like-new condition is treated identically to one with a cracked screen.",
+        "The hypothesis: if we <strong>build dedicated refurbishment centers</strong> and grade returns into three tiers — <strong>Grade A</strong> (like-new, $400 resale), <strong>Grade B</strong> (refurbishable, $250), <strong>Grade C</strong> (parts-only, $50) — can we create a profitable reverse logistics network?",
+        "The core optimization question: <strong>how many facilities do we need, and where should they be located</strong> to minimize total cost while meeting demand and capacity constraints?",
+        "<em>Note: All figures in this project are hypothetical, designed to simplify the problem while remaining grounded in average industry data for electronics returns, refurbishment costs, and California-specific operating costs.</em>"
+      ],
+      "context": "55 California Apple Stores · 28,140 annual returns · 7–8% return rate · 3 product grades · 5 candidate facility locations (Fremont, Ontario, Fresno, San Diego, Reno) · Zero existing refurbishment infrastructure"
+    },
+    "method": {
+      "heading": "The Approach",
+      "bullets": [
+        "The project follows a <strong>structured 8-step pipeline</strong>: generate data from real store locations → build distance matrices → run ArcGIS geographic optimization → run three Gurobi optimization models → validate economics.",
+        "<strong>ArcGIS Network Analyst</strong> handles Phase 1 (geographic distance optimization using real California road networks). <strong>Gurobi Mixed-Integer Programming</strong> handles Phase 2 (cost optimization with facility economics).",
+        "The key insight driving the approach: <strong>facility fixed costs ($720K–$1.05M/year) are 137× larger than total annual logistics costs ($11K/year)</strong>. This means the optimization must prioritize <em>where to build</em>, not <em>how far to ship</em>.",
+        "Four separate optimizations are solved — <strong>ArcGIS distance (unconstrained), Gurobi distance (p=2), Gurobi cost (p=2), and Gurobi optimal-p (p=1–5)</strong> — to show exactly how the answer changes when the objective function and constraints change."
+      ],
+      "flowchart": [
+        { "label": "Step 1 — Data Generation", "detail": "<strong>55 real Apple Store locations</strong> in California were scraped and verified from Apple.com (Feb 2026). For each store, we generated annual return volumes using a <strong>7–8% return rate</strong> (industry standard for electronics). Each return is then categorized into one of three grades: <strong>Grade A (25%)</strong> — like-new condition, resalable at $400; <strong>Grade B (45%)</strong> — cosmetic damage, refurbishable at $250; <strong>Grade C (30%)</strong> — non-functional, harvested for parts at $50. Total annual returns across all stores: <strong>28,140 units</strong>." },
+        { "label": "Step 2 — Candidate Facility Selection", "detail": "We defined <strong>5 candidate refurbishment center locations</strong> across California and Nevada, chosen to test the trade-off between proximity to demand and operating cost:<br><strong>FC01 — Fremont</strong> (Bay Area): $1.05M/year, 25K capacity<br><strong>FC02 — Ontario</strong> (LA Metro): $980K/year, 25K capacity<br><strong>FC03 — San Diego</strong>: $920K/year, 20K capacity<br><strong>FC04 — Fresno</strong> (Central Valley): $820K/year, 20K capacity<br><strong>FC05 — Reno, NV</strong>: $720K/year, 25K capacity — lowest cost due to Nevada tax advantages" },
+        { "label": "Step 3 — Distance Matrix Construction", "detail": "A <strong>55×5 distance matrix</strong> was computed between every store and every candidate facility using two methods. First, the <strong>Haversine formula</strong> (great-circle distance between lat/lon coordinates) multiplied by a <strong>1.3× routing factor</strong> to approximate road distances — this is what the Gurobi models use. Second, <strong>ArcGIS Network Analyst</strong> computed actual road network distances on California's real street network — this feeds the ArcGIS Location-Allocation analysis in the next step." },
+        { "label": "Step 4 — ArcGIS: Network Distance Optimization (Phase 1)", "detail": "ArcGIS Pro's <strong>Location-Allocation solver</strong> was run on the real California road network with a <strong>minimize-impedance</strong> (minimize total weighted distance) objective. Unlike the Gurobi models, <strong>no constraint was placed on the number of facilities</strong> — the solver freely chose how many to open.<br><strong>Result:</strong> ArcGIS selected <strong>1 facility — FC02 (Ontario / LA Metro)</strong> — and assigned all 54 stores to it with an average distance of 26.13 miles. This is the pure distance-optimal answer: Ontario sits at the geographic center of California's retail density. However, this is <strong>operationally infeasible</strong> — 28,140 units exceed FC02's 25,000-unit capacity." },
+        { "label": "Step 5 — Gurobi Model 1: Distance Minimization (p=2)", "detail": "A <strong>Gurobi Mixed-Integer Program (MIP)</strong> that minimizes <strong>total weighted distance</strong> (annual return volume × miles) with a hard constraint that exactly <strong>p=2 facilities</strong> must open. This answers: <em>if we know we need 2 facilities, which 2 minimize total shipping distance?</em><br><strong>Result:</strong> Selects <strong>FC01 (Fremont) + FC02 (Ontario)</strong> — the two coastal sites closest to the Bay Area and LA demand clusters. Total weighted distance: <strong>1,528,331 mile-units</strong>, average 54.31 miles per unit." },
+        { "label": "Step 6 — Gurobi Model 2: Cost Minimization (p=2)", "detail": "Same constraint structure as Model 1 (p=2), but the <strong>objective function changes from distance to total annual cost</strong>: fixed facility costs + freight ($0.000172/mile per unit, based on LTL rates for 0.44 lb smartphones) + handling ($0.35/unit) + pickup fees ($125/facility/year).<br><strong>Result:</strong> Selects <strong>FC04 (Fresno) + FC05 (Reno)</strong> — two inland sites with lower operating costs. The answer flips completely from Model 1. Despite longer shipping distances (257.69 mi avg vs 54.31 mi), the <strong>$490K/year savings in fixed costs</strong> far outweigh the marginal $562 increase in freight. This proves that <strong>distance-optimal ≠ cost-optimal</strong>." },
+        { "label": "Step 7 — Gurobi Model 3: Optimal Facility Count (p=1–5)", "detail": "Runs Model 2's cost minimization for <strong>every possible number of facilities (p = 1 through 5)</strong> to find the cost-optimal count.<br><strong>p=1:</strong> Infeasible — demand (28,140 units) exceeds any single facility's capacity (max 25,000).<br><strong>p=2:</strong> Total cost <strong>$1.55M/year</strong> — the minimum. ✓<br><strong>p=3:</strong> $2.47M/year — adds $920K in fixed costs, saves only $562 in freight.<br><strong>p=4 and p=5:</strong> Costs keep rising. Each additional facility is pure overhead.<br><strong>Conclusion: p*=2 is optimal.</strong>" },
+        { "label": "Step 8 — Financial Validation", "detail": "A <strong>3-year discounted cash flow (DCF) model</strong> validates the business case. Upfront capital investment: <strong>$2.25M</strong> ($1.125M per facility for buildout, equipment, IT, training). Annual revenue from graded resale: <strong>$6.58M</strong> (Grade A: $2.81M + Grade B: $3.17M + Grade C: $0.42M). Annual operating costs: <strong>$2.54M</strong>. Net annual cash flow: <strong>~$4.04M</strong>. At a 10% discount rate, the project generates <strong>$7.95M in net present value</strong>. A <strong>sensitivity analysis across 7 parameters</strong> (resale prices, volumes, costs, CapEx) confirms the solution remains profitable under all tested scenarios." }
+      ],
+      "techStack": ["Python", "Gurobi Optimizer", "ArcGIS Pro", "Power BI", "Pandas", "NumPy"]
+    },
+    "results": {
+      "heading": "The Results",
+      "text": "The optimization concludes that the best configuration is <strong>2 refurbishment centers — Fresno, CA (Central Valley) and Reno, NV</strong> — serving all 55 stores.",
+      "highlights": [
+        "<strong>Optimal facility selection: Fresno + Reno.</strong> These are the two lowest-cost sites in the candidate set ($820K and $720K/year respectively). The model chose inland locations over coastal ones (Fremont, Ontario) because the savings in facility operating costs vastly outweigh the small increase in shipping distance.",
+        "<strong>Value recovery increases from $22/unit to $141/unit — a 541% improvement.</strong> Under the old process, every return earned a flat $22 from a bulk recycler. Under the new graded system, the weighted average resale value across Grade A ($400), Grade B ($250), and Grade C ($50) is $141 per unit. Across 28,140 returns, this raises annual revenue from $619K to $3.97M.",
+        "<strong>Total annual operating cost: $1.55M.</strong> This breaks down to $1.54M in fixed facility costs (rent, staff, equipment), $9,849 in handling ($0.35/unit at the facility), $1,251 in freight (shipping from stores to facilities), and $250 in pickup fees. The critical takeaway: <em>logistics costs are 0.73% of the total</em> — confirming that the optimization should focus on facility economics, not shipping distance.",
+        "<strong>Combined facility utilization: 62.5%.</strong> Fresno (20,000 capacity) processes 19,749 units at 98.7% utilization. Reno (25,000 capacity) processes 8,391 units at 33.6%. Total capacity is 45,000 units vs. 28,140 demand — providing a healthy buffer for volume growth without needing a third facility."
+      ]
+    },
+    "financialValidation": {
+      "heading": "Financial Validation",
+      "intro": "To confirm that building these facilities is a sound business decision — not just an operationally optimal one — we built a <strong>3-year financial model</strong> that projects all costs and revenues, discounts them to today's value, and stress-tests the results.",
+      "sections": [
+        {
+          "title": "Capital Investment (Year 0)",
+          "text": "Before any facility generates revenue, we need to <strong>spend $2.25M upfront</strong> ($1.125M per facility). This covers facility buildout ($500K), sorting and testing equipment ($250K), refurbishment tools and parts inventory ($200K), IT systems ($75K), safety compliance ($50K), and staff training ($50K). This is the money we put in before anything comes back."
+        },
+        {
+          "title": "Annual Cash Flows (Years 1–3)",
+          "text": "Each year, the network processes ~28,000 returns and generates <strong>$6.58M in gross revenue</strong> from graded resale. After subtracting $2.54M in operating costs (facility costs + processing + logistics), the <strong>net cash flow is approximately $4.04M per year</strong>. This means by the end of Year 1, we've already recovered our initial investment and have $1.79M in profit."
+        },
+        {
+          "title": "Net Present Value (NPV) = $7.95M",
+          "text": "NPV answers: <em>\"what is the total value this project creates, in today's dollars?\"</em> A dollar earned 3 years from now is worth less than a dollar today (because of inflation, risk, and opportunity cost). We use a <strong>10% discount rate</strong> (representing the company's cost of capital) to convert all future cash flows to their present value. After discounting 3 years of ~$4M annual cash flows and subtracting the $2.25M investment, the result is <strong>$7.95M</strong> — meaning this project creates nearly $8M in real value."
+        },
+        {
+          "title": "Payback Period = 6.7 Months",
+          "text": "This is how long it takes to <strong>earn back the initial $2.25M investment</strong>. With net cash flows of ~$4.04M/year (~$337K/month), the breakeven point is reached in <strong>just under 7 months</strong>. Anything earned after that is pure profit. For context, most industrial projects target a 2–3 year payback — this project pays for itself 4× faster."
+        },
+        {
+          "title": "Return on Investment (ROI) = 447%",
+          "text": "ROI measures how much profit the project generates <em>relative to what was invested</em>. Over 3 years, the project returns <strong>$4.48 for every $1 invested</strong>. Calculated as: (total 3-year net cash flows − initial investment) ÷ initial investment × 100. An ROI above 100% means you more than doubled your money — 447% means you earned 4.5× your investment back."
+        },
+        {
+          "title": "Sensitivity Analysis — What Could Go Wrong?",
+          "text": "We tested what happens when 7 key parameters change by ±20–30%: resale prices, fixed costs, freight costs, handling costs, return volumes, CapEx, and growth rates. The findings: <strong>resale prices and return volume are the only parameters that materially impact NPV</strong>. A 10% drop in resale prices reduces NPV by ~$330K (still highly positive). Freight cost variation has <strong>near-zero impact (&lt;0.1% of NPV)</strong> — further validating the inland facility strategy. Even the worst-case conservative scenario (0% growth, 4% inflation, 10% price haircut) still yields <strong>$5.58M NPV</strong>."
+        }
+      ]
+    },
+    "assumptions": {
+      "heading": "Key Assumptions",
+      "intro": "This is a hypothetical problem built on industry-average data. The following assumptions underpin the entire analysis:",
+      "items": [
+        "<strong>Return rate of 7–8%:</strong> Based on published electronics industry averages. Actual rates vary by retailer, product mix, and return policy.",
+        "<strong>Grading distribution (25/45/30):</strong> The split of Grade A, B, and C returns is assumed constant across all stores and all time periods. In practice, grade mix varies by product age and store demographics.",
+        "<strong>Resale prices are fixed:</strong> Grade A at $400, Grade B at $250, Grade C at $50. In reality, resale value depends on device model, age, market conditions, and buyer channels.",
+        "<strong>Annual fixed costs are constant:</strong> Facility operating costs ($720K–$1.05M) are assumed flat year-over-year. Real-world costs inflate with labor rates, energy costs, and lease renewals.",
+        "<strong>Single-assignment model:</strong> Each store ships all its returns to exactly one facility. No split shipments, no multi-echelon routing.",
+        "<strong>Capacity is hard-capped:</strong> Each facility has a maximum annual throughput (20,000 or 25,000 units) that cannot be exceeded. No overtime or surge capacity modeled.",
+        "<strong>Distances use Haversine × 1.3:</strong> Straight-line distances with a 1.3× routing factor approximate road distances. ArcGIS Network Analyst was used for validation but the Gurobi models use this approximation.",
+        "<strong>Discount rate of 10%:</strong> Represents the company's weighted average cost of capital (WACC). A higher rate would reduce NPV; a lower rate would increase it.",
+        "<strong>3-year time horizon:</strong> Financial projections cover only 3 years. Longer horizons would increase NPV but also increase uncertainty.",
+        "<strong>No demand uncertainty:</strong> Return volumes are treated as deterministic. Stochastic modeling (e.g., Monte Carlo simulation) was not applied."
+      ]
+    },
+    "images": [
+      { "src": "/images/projects/supply-chain/arcgis_map.png", "alt": "ArcGIS Network Design — Location-Allocation Analysis" },
+      { "src": "/images/projects/supply-chain/financial_cash_flow_model.png", "alt": "Financial Cash Flow Model" },
+      { "src": "/images/projects/supply-chain/optimal_p_analysis.png", "alt": "Optimal Facility Count Analysis" },
+      { "src": "/images/projects/supply-chain/sensitivity_spider_chart.png", "alt": "Sensitivity Spider Chart" },
+      { "src": "/images/projects/supply-chain/sensitivity_analysis.png", "alt": "Parameter Sensitivity Analysis" }
+    ],
+    "github": "https://github.com/arnav-chudiwale"
+  },
+  {
+    "slug": "last-mile-delivery",
+    "title": "Last-Mile Delivery Optimization",
+    "subtitle": "Peak Season Surge Capacity Planning",
+    "tag": "Completed",
+    "date": "Dec 2025",
+    "heroVideo": "/videos/warehouse.mp4",
+    "foliumMap": {
+      "src": "/maps/baseline_routes_map.html",
+      "title": "Baseline Vehicle Routing Problem (VRP) Routes — Folium Interactive Map",
+      "sectionName": "Baseline Route Visualization"
+    },
+    "oneLiner": "Designed a dynamic routing system that cut peak-day delivery costs by 40.8% while maintaining 100% service levels during a 162% demand surge.",
+    "cardImage": "/images/projects/warehouse.jpg",
+    "cardIntro": "Ever wondered how Amazon delivers millions of packages during Black Friday without collapsing? I attempted to solve this capacity crisis problem that every e-commerce fulfillment center faces during peak season.",
+    "hero": "/images/projects/last-mile/baseline_analysis.png",
+    "metrics": [
+      { "value": "40.8%", "label": "Cost Reduction" },
+      { "value": "$10.8K", "label": "Daily Savings" },
+      { "value": "100%", "label": "Service Level" }
+    ],
+    "problem": {
+      "heading": "The Problem",
+      "bullets": [
+        "An e-commerce fulfillment center in New York City operates a fleet of <strong>32 small delivery vans</strong> (50 packages each, <strong>1,600 pkg/day fleet capacity</strong>) serving <strong>500 urban delivery locations</strong> across 8 neighborhood clusters within a 10 km radius of a single central depot.",
+        "Under normal operations, the fleet handles <strong>1,490 packages/day</strong> using 31 of 32 vehicles at <strong>96.9% utilization</strong> — a well-tuned baseline costing <strong>$10,226/day</strong> ($6.86 per package), split across vehicle leases ($3,720), fuel ($306), and driver labor ($6,200).",
+        "During peak shopping season (5–10 days), demand surges <strong>162% to 3,906 packages/day</strong> — creating a <strong>2,306-package capacity shortfall</strong> that the existing fleet physically cannot serve. <strong>59% of peak demand goes unmet.</strong>",
+        "The \"do nothing\" scenario is catastrophic: <strong>2,306 unserved packages × $18 late-delivery penalty = $41,508/day in penalties</strong> alone. Over a 5-day peak window, total losses reach <strong>$258,669</strong> — a cost no operation can absorb.",
+        "The project evaluates three operational levers to close the gap: <strong>extended driver shifts</strong> (overtime at $37.50/hr, 1.5× regular rate), <strong>3PL outsourcing</strong> ($12.50 per package), and <strong>dynamic vehicle re-dispatch</strong> across multiple time windows — without purchasing any new vehicles.",
+        "<em>Note: All delivery locations, demand figures, and arrival patterns are synthetically generated. Fleet costs, driver wages, 3PL rates, and the 162% peak surge multiplier are based on published industry averages for urban e-commerce operations.</em>"
+      ],
+      "context": "500 NYC delivery locations · 32 small vans (50 pkg capacity) · 1,600 pkg/day fleet capacity · 162% peak demand surge · $18/pkg late penalty · 5-day peak window"
+    },
+    "method": {
+      "heading": "The Approach",
+      "bullets": [
+        "The project follows a <strong>structured 8-step pipeline</strong>: generate a synthetic delivery network → configure fleet economics → build distance matrices → solve the baseline VRP → model peak demand arrivals → evaluate 6 static strategies → simulate dynamic routing with vehicle reuse → validate via sensitivity analysis.",
+        "<strong>Google OR-Tools' Capacitated VRP solver</strong> (Parallel Cheapest Insertion + Guided Local Search metaheuristic, 300-second time limit) handles route optimization. Each vehicle has a hard 50-package capacity constraint, and the solver minimizes total fleet distance across all routes simultaneously.",
+        "The core comparison: <strong>6 static strategies</strong> (ranging from overtime-only to full outsourcing) are benchmarked against a <strong>dynamic routing model</strong> that re-dispatches vehicles across 4 time windows (8 AM, 10 AM, 12 PM, 2 PM) — converting a single-use fleet into a multi-wave delivery operation.",
+        "<strong>SciPy's minimize_scalar</strong> optimizer determines the exact optimal overtime–outsourcing split, confirming that <strong>2.0 hours of overtime</strong> minimizes total additional peak cost at $26,425 — any more overtime yields diminishing returns, any less shifts cost to outsourcing."
+      ],
+      "flowchart": [
+        { "label": "Step 1 — Synthetic Data Generation", "detail": "<strong>500 delivery locations</strong> were generated around <strong>8 random cluster centers</strong> within 10 km of the NYC depot (40.7128°N, 74.0060°W) using Gaussian distributions (σ = 0.01° lat/lon). Base demand per location follows a weighted random draw: 50% get 2 packages, 30% get 3, 15% get 4, 4% get 8, 1% get 10 — producing <strong>1,490 total baseline packages/day</strong>. Peak demand applies a <strong>2.67× multiplier</strong> to each location, yielding <strong>3,906 packages/day</strong>." },
+        { "label": "Step 2 — Fleet & Cost Configuration", "detail": "<strong>32 small vans</strong> with <strong>50-package capacity</strong> each (1,600 pkg/day fleet capacity). Cost structure: <strong>$120/day fixed</strong> (lease + insurance), <strong>$0.50/km fuel</strong>, <strong>$25/hr regular driver pay</strong> ($37.50/hr overtime at 1.5× after 8 hours, max 10-hour shifts). 3PL outsourcing: <strong>$12.50/package</strong>. Late delivery penalty: <strong>$18/package</strong>. Service time: 10 min/stop." },
+        { "label": "Step 3 — Distance & Time Matrices", "detail": "A <strong>501 × 501 distance matrix</strong> (500 locations + depot) was computed using the <strong>Haversine formula</strong> (great-circle distance). Max distance: 24.55 km, mean: 9.79 km. Time matrix derived at <strong>40 km/hr urban speed</strong> and converted to integer minutes. Distances scaled to meters (×1000) for the OR-Tools C++ solver to prevent zero-truncation of sub-kilometer values." },
+        { "label": "Step 4 — VRP Baseline Optimization", "detail": "Google OR-Tools' <strong>Capacitated VRP solver</strong> (Parallel Cheapest Insertion + Guided Local Search, 300s time limit) optimized routes for all 32 vehicles on the normal-day demand of 1,490 packages.<br><strong>Result:</strong> <strong>31 of 32 vehicles used</strong>, total distance <strong>612.20 km</strong> (19.75 km avg/route), average load <strong>48.06 packages/van</strong> (96.1% capacity utilization). Baseline cost: <strong>$10,226/day</strong> — broken down as $3,720 vehicle fixed + $306 fuel + $6,200 labor." },
+        { "label": "Step 5 — Peak Demand Modeling", "detail": "Peak-day order arrivals were simulated across <strong>4 time windows</strong> mimicking e-commerce shopping patterns: <strong>6–9 AM:</strong> 25% of orders (668 packages, overnight accumulation); <strong>9 AM–12 PM:</strong> 35% (1,361 packages, peak shopping); <strong>12–3 PM:</strong> 25% (977 packages); <strong>3–6 PM:</strong> 15% (585 packages). Cumulative demand is tracked at each dispatch decision point (8 AM, 10 AM, 12 PM, 2 PM) to feed the dynamic routing model." },
+        { "label": "Step 6 — Static Strategy Evaluation", "detail": "<strong>6 strategies</strong> were compared using the same peak demand of 3,906 packages:<br>• <strong>Overtime Only (2h):</strong> Adds 384 packages via extended shifts, but still leaves 1,922 unserved → <strong>$47,222/day, 50.8% service level</strong> — infeasible.<br>• <strong>Outsource All Overflow:</strong> All 2,306 excess packages to 3PL → <strong>$39,051/day, 100% service.</strong><br>• <strong>4 Hybrid variants</strong> (0.8–2.0h overtime + selective outsourcing): best is <strong>2.0h OT + outsource → $36,651/day, 100% service</strong> — confirmed optimal via SciPy optimization." },
+        { "label": "Step 7 — Dynamic Routing Simulation", "detail": "Instead of dispatching all vehicles once at 8 AM, the fleet is <strong>re-dispatched across 4 waves</strong> as orders accumulate throughout the day:<br>• <strong>8 AM:</strong> Full fleet dispatches 668 packages (all known demand).<br>• <strong>10 AM:</strong> All vehicles still in-transit (~4h round-trip), 793 packages outsourced.<br>• <strong>12 PM:</strong> 50% of fleet returns → 800 packages in-house, 99 outsourced.<br>• <strong>2 PM:</strong> Full fleet available again → 677 packages dispatched in-house.<br><strong>Result:</strong> 2,145 packages in-house + 892 outsourced = <strong>$25,871/day</strong> — a <strong>29.4% total cost reduction</strong> vs the best static strategy, with <strong>54% less outsourcing</strong>." },
+        { "label": "Step 8 — Sensitivity Analysis", "detail": "Three stress tests validated model robustness:<br>• <strong>±20% demand variance:</strong> Cost per package varies only ±2.8% — the model is stable under forecast error.<br>• <strong>3PL capacity constraints:</strong> When capped at 1,500 packages, 422 go unserved and $7,596 in penalties accrue — recommending a <strong>2,000-package 3PL buffer</strong> (4.1% safety margin above worst-case need).<br>• <strong>Overtime limits (0.5–2.0h):</strong> Diminishing returns confirm <strong>2.0 hours optimal</strong> — each additional 0.5h of overtime displaces ~96 outsourced packages." }
+      ],
+      "techStack": ["Python", "Google OR-Tools", "Folium", "Pandas", "NumPy", "SciPy"]
+    },
+    "results": {
+      "heading": "The Results",
+      "text": "The dynamic routing approach converts a single-use fleet into a multi-wave delivery operation — dramatically shifting the cost structure of peak-day logistics.",
+      "highlights": [
+        "The <strong>best static strategy</strong> (2h overtime + selective outsourcing) handles peak demand at <strong>$36,651/day</strong> with 100% service — but still outsources <strong>49.2%</strong> of packages (1,922 of 3,906) to a third-party logistics provider.",
+        "<strong>Dynamic routing reduces total peak-day cost to $25,871</strong> by re-dispatching vehicles across 4 time windows. The incremental cost of handling peak demand drops from $26,425 to $15,645 — a <strong>40.8% reduction</strong> in peak-period additional cost.",
+        "Outsourcing drops from <strong>1,922 packages to 892</strong> (a 54% reduction), as vehicle reuse adds <strong>161 more in-house deliveries</strong> (+8.2% throughput) — without purchasing a single additional van.",
+        "Both approaches maintain <strong>100% service levels</strong>, completely avoiding the <strong>$41,508/day late-delivery penalty</strong> scenario. Over a 5-day peak window, dynamic routing saves approximately <strong>$53,900</strong> versus the best static alternative."
+      ],
+      "strategyComparison": {
+        "strategies": ["Hybrid (OT:2.0h + Outsource)", "Hybrid (OT:1.6h + Outsource)", "Hybrid (OT:1.2h + Outsource)", "Hybrid (OT:0.8h + Outsource)", "Outsource All Overflow", "Overtime Only (10h shifts)"],
+        "totalCosts": [36650.81, 37133.31, 37615.81, 38098.31, 39050.81, 47221.81],
+        "serviceLevels": [100.0, 100.0, 100.0, 100.0, 100.0, 50.79],
+        "outsourcePcts": [49.21, 51.18, 53.15, 55.12, 59.04, 0],
+        "feasible": [true, true, true, true, true, false],
+        "baselineCosts": [10225.81, 10225.81, 10225.81, 10225.81, 10225.81, 10225.81],
+        "overtimeCosts": [0, 0, 0, 0, 0, 2400.0],
+        "outsourceCosts": [24025.0, 24987.5, 25950.0, 26912.5, 28825.0, 0],
+        "penaltyCosts": [0, 0, 0, 0, 0, 34596]
+      }
+    },
+    "assumptions": {
+      "heading": "Key Assumptions & Simplifications",
+      "intro": "This model makes several deliberate simplifications to focus on the core capacity–cost trade-off. Each assumption below represents a potential extension point for a more detailed operational model.",
+      "items": [
+        "<strong>Single depot, single vehicle type</strong> — all 32 vehicles are identical small vans (50-pkg capacity). No multi-depot routing or mixed-fleet optimization.",
+        "<strong>Vehicle round-trip time is ~4 hours</strong> — dispatch at 8 AM, return by ~12 PM. This determines when vehicles become available for re-dispatch in the dynamic routing model.",
+        "<strong>50% fleet availability at 12 PM</strong> — a conservative estimate for partial fleet return during the first wave's turnaround. Full fleet returns by 2 PM.",
+        "<strong>3PL has unlimited outsourcing capacity</strong> at a flat $12.50/package. Sensitivity analysis relaxes this: capping at 1,500 packages introduces $7,596/day in late penalties.",
+        "<strong>No vehicle breakdowns, traffic incidents, or weather disruptions</strong> are modeled. All vehicles complete their assigned routes without failure.",
+        "<strong>Driver productivity is constant at 6 packages/hour</strong> — derived from baseline performance (1,490 packages ÷ 31 vehicles ÷ 8 hours). No fatigue degradation during overtime.",
+        "<strong>Time window preferences are not enforced as hard constraints</strong> in the VRP solver. The 40/40/20% morning/afternoon/evening preference split is used for demand modeling only.",
+        "<strong>All packages are pre-staged at the depot</strong> — no warehouse picking, packing, or loading delays are modeled. Vehicles depart immediately at dispatch time.",
+        "<strong>Dynamic routing incurs zero coordination overhead</strong> — no additional dispatcher labor, software, or communication costs for managing multi-wave dispatch.",
+        "<strong>Demand arrival pattern is deterministic</strong> — the 25/35/25/15% time-window split is fixed. No stochastic variation within windows (e.g., no random early/late surges)."
+      ]
+    },
+    "images": [
+      { "src": "/images/projects/last-mile/baseline_analysis.png", "alt": "Baseline Route Analysis" },
+      { "src": "/images/projects/last-mile/demand_arrival_pattern.png", "alt": "Peak Demand Arrival Pattern" },
+      { "src": "/images/projects/last-mile/sensitivity_analysis.png", "alt": "Cost Sensitivity Analysis" }
+    ],
+    "github": "https://github.com/arnav-chudiwale"
+  },
+  {
+    "slug": "sp500-risk-portfolio",
+    "title": "S&P 500 Risk-Aware Portfolio Optimization",
+    "subtitle": "ML-Driven Risk Prediction & Dynamic Allocation",
+    "tag": "Completed",
+    "date": "2025",
+    "heroVideo": "/videos/trade2.mp4",
+    "oneLiner": "Built a machine learning system using 100+ predictive signals to dynamically de-risk portfolio allocation when crash probability rises.",
+    "cardImage": "/images/projects/portfolio.jpg",
+    "cardIntro": "Most financial portfolio managers react to crashes after they happen. I built a system that predicts them before they do—and automatically moves capital away from the danger zone.",
+    "hero": "/images/projects/sp500/dashboard.svg",
+    "metrics": [
+      { "value": "100+", "label": "Predictive Signals" },
+      { "value": "7", "label": "Feature Families" },
+      { "value": "Best", "label": "Risk-Adjusted Return" }
+    ],
+    "problem": {
+      "heading": "The Problem",
+      "bullets": [
+        "Imagine you have <strong>$1 million</strong> and want to spread it across <strong>500 of America's largest companies</strong> (the S&P 500 — Apple, Google, Amazon, etc.). The simplest approach: give each stock an equal share. A smarter approach: give <em>more</em> money to stocks that have been going up recently (this is called <strong>momentum</strong> — riding the wave of winners).",
+        "The problem with both approaches? <strong>They're blind to danger.</strong> Neither one checks whether a stock is <em>about to crash</em>. A stock can be trending upward for weeks, but if its price is getting wildly unstable, trading volume is spiking abnormally, and overnight price gaps are widening — those are warning signs that a crash may be days away. Momentum strategies would pour <em>more</em> money into that stock, not less.",
+        "<strong>The hypothesis:</strong> what if we could <em>predict</em> which stocks are likely to drop over the next 5 trading days — and automatically pull our money away from them before it happens? Not by guessing, but by feeding a machine learning model <strong>95+ measurable signals</strong> about each stock's recent behavior (how erratic its price has been, how unusual its trading volume is, whether its trend is bending downward) and letting the model learn the patterns that precede a crash.",
+        "The system I built does exactly this. Every Monday, it scores all 500 stocks with a <strong>crash probability from 0% to 100%</strong>. Stocks predicted as dangerous get their allocation reduced or zeroed out. Stocks that are trending up <em>and</em> show low crash risk get the largest share of capital. <strong>The result: a portfolio that chases upside but flinches away from danger.</strong>",
+        "<em>Note: All stock price data is real (S&P 500, Jan–Jun 2025). The portfolio results are a backtest simulation — \"what would have happened if we'd used this system\" — not actual trades. The simulation assumes we can buy/sell at exact closing prices with no delays.</em>"
+      ],
+      "context": "500 S&P 500 stocks · Real daily price data (Jan–Jun 2025, 126 trading days) · 95+ engineered features · $1M starting portfolio · Weekly Monday rebalancing"
+    },
+    "method": {
+      "heading": "The Approach",
+      "bullets": [
+        "The pipeline: collect 6 months of real stock data → build <strong>95+ measurable signals</strong> about each stock's recent behavior → teach a machine learning model to recognize crash patterns → use the model's predictions to decide how much money each stock gets, every Monday.",
+        "<strong>Why LightGBM?</strong> It's a gradient-boosted decision tree model — think of it as building hundreds of simple yes/no decision rules (\"Is 5-day volatility above X? Is volume spiking?\") and combining them into one powerful predictor. LightGBM is specifically designed for <strong>tabular data with many features</strong> (exactly what we have: 95+ columns of stock behavior metrics), it trains fast, handles missing values natively, and consistently outperforms other algorithms on structured datasets. It's the industry workhorse for this type of prediction task.",
+        "<strong>The core formula in plain English:</strong> For each stock, the model outputs a crash probability (0–100%). We then compute: <em>\"How safe is this stock?\"</em> × <em>\"How strong is its recent uptrend?\"</em> If a stock has a <strong>30%+ crash probability, it gets zero money</strong> — we won't touch it. Below that threshold, the safer the stock and the stronger its upward trend, the more money it gets. This single formula is how the system <strong>chases winning stocks while avoiding predicted crashes</strong>.",
+        "To ensure the model isn't cheating, we enforce a <strong>strict time boundary</strong>: it trains only on January–April data (~50,000 observations), is tuned on May data, and is tested on June data <strong>that it has never seen before</strong>. This mirrors real-world conditions — we can never train on the future."
+      ],
+      "flowchart": [
+        { "label": "Step 1 — Collect Stock Data", "detail": "We gathered <strong>daily price and trading volume data</strong> for all <strong>500 S&P 500 stocks</strong> from January to June 2025 — about 126 trading days. For each stock on each day, we have: opening price, closing price, and how many shares were traded. This raw data is reshaped into <strong>~63,000 rows</strong> (one row per stock-per-day), which becomes the foundation for everything that follows." },
+        { "label": "Step 2 — Engineer 95+ Warning Signals", "detail": "From the raw price/volume data, we <strong>calculate 95+ features</strong> organized into <strong>7 families</strong>, each designed to detect a different kind of danger:<br>• <strong>Volatility</strong> — Is the stock's price swinging more wildly than usual? (rolling standard deviation over 3, 5, 10, 20 days)<br>• <strong>Momentum</strong> — Is the stock trending up or down? How strong is the trend?<br>• <strong>Overnight Gaps</strong> — Did the stock open significantly higher/lower than yesterday's close? (a potential panic signal)<br>• <strong>Volume Spikes</strong> — Is trading volume abnormally high? (often precedes sharp moves)<br>• <strong>Market Stress</strong> — Is the overall market getting more turbulent?<br>• <strong>Company-Specific Risk</strong> — Is this particular stock behaving differently from the market?<br>• <strong>Trend Shape</strong> — Is the uptrend accelerating, flattening, or curving downward?" },
+        { "label": "Step 3 — Create Crash Labels", "detail": "For each stock on each day, we look <strong>5 trading days into the future</strong> and ask: did the price go down? If yes, we label that stock-day as a <strong>\"crash\" (1)</strong>. If the price stayed flat or went up, it's labeled <strong>\"no crash\" (0)</strong>. About <strong>25% of all stock-days are labeled as crashes</strong> — meaning price drops within 5 days happen roughly one in four times. These labels are what the machine learning model learns to predict." },
+        { "label": "Step 4 — Train the ML Model", "detail": "We feed the <strong>95+ features</strong> and the <strong>crash/no-crash labels</strong> into a <strong>LightGBM classifier</strong> — a machine learning algorithm that builds hundreds of decision trees, each learning a different crash pattern. The model trains on <strong>January–April data only</strong> (~50,000 observations). May data is used to fine-tune settings (how complex the trees should be, how fast the model learns). <strong>June data is held out entirely</strong> — the model has never seen it. This prevents the model from memorizing history instead of learning real patterns." },
+        { "label": "Step 5 — Score Every Stock, Every Monday", "detail": "For each Monday in June, the trained model looks at each stock's <strong>current 95+ signals</strong> and outputs a <strong>crash probability between 0% and 100%</strong>. Then the allocation formula kicks in: <strong>stocks above 30% crash probability get zero money</strong>. For the rest, each stock's share of the $1M portfolio is proportional to: <em>(how safe it is) × (how strong its recent uptrend is)</em>. The safer and more upward-trending, the more capital it receives." },
+        { "label": "Step 6 — Simulate & Compare", "detail": "We run the <strong>June 2025 backtest</strong> — every Monday, reallocate the $1M portfolio using three strategies side-by-side:<br>• <strong>ML Risk-Adjusted:</strong> Our system (uses crash predictions to avoid danger).<br>• <strong>Pure Momentum:</strong> Just follow the trend — give more to stocks going up, ignore crash risk.<br>• <strong>Equal-Weight:</strong> Give every stock the same share. No intelligence at all.<br>After each rebalance, we deduct <strong>0.1% transaction costs</strong> (the fee for buying/selling). Then we compare: who made the most money? Who lost the least during dips? Who had the smoothest ride?" }
+      ],
+      "techStack": ["Python", "LightGBM", "Scikit-Learn", "Pandas", "NumPy", "Joblib", "JavaScript"]
+    },
+    "results": {
+      "heading": "The Results",
+      "text": "We tested all three strategies on June 2025 data — a month the model had never seen during training. All three start with the same $1M and pay the same trading fees. Here's what happened.",
+      "highlights": [
+        "<strong>The ML strategy grew $1M to ~$1,045,000 (+4.5%)</strong> in one month. The momentum-only strategy returned ~3.8%, and equal-weight returned ~3.2%. The ML system didn't just make more money — it made money <strong>more safely</strong>.",
+        "<strong>The biggest win is in crash protection.</strong> During the worst dip in June, the ML portfolio dropped only <strong>1.8%</strong> from its peak before recovering. The momentum portfolio — which ignores crash risk — dropped <strong>2.6%</strong> in the same period. That's a <strong>~30% smaller worst-case loss</strong>, because the model had already pulled money away from the stocks that fell hardest.",
+        "<strong>Why this matters:</strong> In real investing, avoiding big losses matters more than chasing big gains. A 50% loss requires a 100% gain just to break even. By detecting danger signals early and reducing exposure to risky stocks <em>before</em> they drop, the ML system delivers a smoother, more stable ride — which compounds into significantly better long-term performance.",
+        "<strong>No single signal type does this alone.</strong> The model combines all 7 families — it might detect that a stock's price is swinging wildly (volatility), its trading volume just spiked (volume), and its uptrend is bending downward (trend shape). Any one of those signals alone is noisy; combined, they form a reliable crash warning. This is why machine learning works here — it learns which combinations of signals matter most."
+      ]
+    },
+    "hasDemo": true,
+    "assumptions": {
+      "heading": "Key Assumptions & Simplifications",
+      "intro": "This project uses real stock market data but simplifies several aspects of how real-world trading works. These are standard simplifications for a backtesting project.",
+      "items": [
+        "<strong>We assume trades happen at the exact closing price</strong> — in reality, large buy/sell orders can move prices. We don't model this price slippage.",
+        "<strong>Any stock can be bought or sold in any quantity, instantly</strong> — real markets have limited supply. Some smaller stocks can't absorb large orders without price impact.",
+        "<strong>Trading fees are a flat 0.1% of the amount traded</strong> — real fees vary by broker, stock, and order size. We apply a single, fixed rate for simplicity.",
+        "<strong>The portfolio is only rebalanced once per week (Mondays)</strong> — if a stock crashes on Tuesday, the system doesn't react until the following Monday. No mid-week emergency exits are modeled.",
+        "<strong>\"Crash\" is defined as any price drop over 5 days</strong> — even a tiny −0.01% decline counts the same as a −10% plunge. A severity-aware label could help the model distinguish between noise and real danger.",
+        "<strong>The 30% crash probability cutoff is fixed</strong> — stocks above this threshold get zero money. This number wasn't optimized and may not be ideal for all market conditions.",
+        "<strong>The test window is only one month (June 2025)</strong> — one month of results doesn't prove the system works in all conditions (bear markets, high-volatility periods, sideways markets). Longer testing across different environments would strengthen the conclusion.",
+        "<strong>Many features overlap</strong> — we calculate momentum over 3, 5, 10, and 20 days, and volatility over similar windows. These carry partially redundant information. LightGBM handles this well internally, but explicit feature reduction wasn't applied.",
+        "<strong>The stock universe is treated as fixed</strong> — stocks added to or removed from the S&P 500 during this period aren't accounted for. In practice, this creates a minor survivorship bias.",
+        "<strong>This is a backtest, not live trading</strong> — the results show what <em>would have</em> happened, not what <em>did</em> happen. Real execution introduces timing, liquidity, and behavioural factors that simulations can't fully capture."
+      ]
+    },
+    "images": [
+      { "src": "/images/projects/sp500/dashboard.svg", "alt": "Portfolio Simulation Dashboard" }
+    ],
+    "github": "https://github.com/arnav-chudiwale"
+  },
+  {
+    "slug": "mcf-network-scheduling",
+    "title": "MCF Network Scheduling for GPU Resource Allocation",
+    "subtitle": "Minimum Cost Flow Optimization for Multi-Tenant GPU Clusters",
+    "tag": "In Progress",
+    "date": "2026",
+    "oneLiner": "Formulating GPU cluster scheduling as a minimum cost flow problem to balance utilization, fairness, and latency across 5 tenants and 1,000 resource units.",
+    "cardImage": "/images/projects/network.jpg",
+    "hero": "/images/projects/mcf-scheduling/hero.svg",
+    "metrics": [
+      { "value": "1,000", "label": "Resource Units" },
+      { "value": "125", "label": "Physical Nodes" },
+      { "value": "5", "label": "Tenants" }
+    ],
+    "problem": {
+      "heading": "The Problem",
+      "bullets": [
+        "Imagine an AI Datacenter with <strong>1,000 GPUs spread across 125 physical machines</strong> (8 GPUs each). Five different companies (tenants) share this cluster — each paying for a guaranteed minimum amount of computing power, with the option to temporarily burst above their quota when capacity is available.",
+        "Jobs arrive continuously in <strong>three types</strong>: <strong>Batch jobs</strong> (large, long-running tasks like training an AI model — they need multiple GPUs on nearby machines), <strong>Real-Time jobs</strong> (latency-critical tasks like serving live predictions — they must start within <strong>100 milliseconds</strong> or the SLA is violated), and <strong>Medium jobs</strong> (everything in between).",
+        "Every <strong>5 minutes</strong>, the scheduler must answer a complex question: which pending jobs should start now, and <em>which specific machines</em> should they run on? The difficulty is that three goals compete with each other: <strong>maximize utilization</strong> (don't leave GPUs sitting idle — each idle unit costs $2/hour), <strong>enforce fairness</strong> (each tenant must get at least their contractual quota), and <strong>meet latency SLAs</strong> (Real-Time jobs can't wait).",
+        "Simple scheduling rules — like <strong>First-Come-First-Served (FIFO)</strong> or <strong>Shortest-Job-First (SJF)</strong> — handle jobs one at a time and ignore the bigger picture. They can't jointly optimize placement across dozens of jobs, 125 machines, and 5 tenants simultaneously. <strong>The result: wasted GPUs, unfair tenant treatment, and SLA violations.</strong>",
+        "This project formulates the scheduling decision as a <strong>Minimum Cost Flow (MCF) network optimization</strong> — a mathematical framework that finds the provably optimal assignment of all pending jobs to all available machines in a single solve, balancing all three objectives at once."
+      ],
+      "context": "1,000 GPU units · 125 nodes (8 GPUs each) · 5 tenants with contractual quotas · 3 job types · 100ms Real-Time SLA · 5-minute scheduling epochs · $2/hr GPU idle cost"
+    },
+    "method": {
+      "heading": "The Approach",
+      "bullets": [
+        "Think of it like an airline routing problem — but instead of passengers and flights, we're routing <strong>jobs to GPUs</strong>. We build a network where every possible \"job → machine\" pairing is a path with a price tag. The algorithm's job: find the cheapest way to route all pending jobs to available machines. That \"cheapest\" price encodes everything we care about — utilization, fairness, and latency — in <strong>one number</strong>.",
+        "<strong>Why this specific math?</strong> Most schedulers use rules of thumb — good enough, but never provably the best. MCF is different. It has a property called <strong>total unimodularity</strong>, which in plain terms means: because GPUs come in whole units (you can't assign half a GPU), the math <em>guarantees</em> the answer is exact. No rounding, no approximating. <strong>The solution it finds isn't just good — it's the best one possible.</strong>",
+        "We score every possible placement with a <strong>single cost function</strong> that blends three tensions: <strong>fragmentation</strong> (don't scatter a job's GPUs across the building — keep them close for fast communication), <strong>contention</strong> (don't cram too many jobs onto one machine — they'll fight over memory), and <strong>urgency</strong> (Real-Time jobs get priority on the fastest hardware). Adjusting the weights between these three is how operators tell the scheduler what matters most.",
+        "The solver works by repeatedly finding the <strong>cheapest available route</strong> through the network and assigning jobs along it — much like water finding the path of least resistance. A clever preprocessing trick (<strong>Johnson's reweighting</strong>) keeps the algorithm fast even when cost structures are complex. The result: an optimal assignment for the entire cluster, solved fresh every 5 minutes."
+      ],
+      "flowchart": [
+        { "label": "Step 1 — Build the Flow Network", "detail": "Every 5 minutes, the scheduler constructs a <strong>5-layer directed graph</strong>:<br>• <strong>Source</strong> → represents the pool of all pending jobs<br>• <strong>Job nodes</strong> → one node per pending job (tagged by type: Batch, Real-Time, or Medium)<br>• <strong>Machine-slot nodes</strong> → 125 machines × 8 GPU slots = 1,000 possible placement slots<br>• <strong>Tenant nodes</strong> → 5 nodes enforcing each tenant's quota and burst limits via arc capacities<br>• <strong>Sink</strong> → receives all assigned flow<br>An arc from a job node to a machine-slot node carries a <strong>placement cost</strong> encoding fragmentation, co-location, and latency penalties. The solver's goal: push flow from source to sink at minimum total cost." },
+        { "label": "Step 2 — Compute Placement Costs", "detail": "For every possible (job, machine) pair, we compute a cost that captures three competing concerns:<br>• <strong>Fragmentation penalty</strong> — placing a multi-GPU job across scattered machines increases communication overhead. The cost favors packing jobs onto adjacent slots.<br>• <strong>Co-location penalty</strong> — putting too many similar jobs on one machine causes resource contention (memory, network bandwidth). The cost discourages over-packing.<br>• <strong>Latency urgency</strong> — Real-Time jobs get significantly lower cost on low-latency machines, so the solver naturally selects them first.<br>These three components are weighted by tunable parameters, giving operators control over the scheduler's priorities." },
+        { "label": "Step 3 — Solve with Successive Shortest Paths", "detail": "The <strong>SSP algorithm</strong> finds the optimal job-to-machine assignment:<br>1. Run a one-time <strong>Bellman-Ford pass</strong> to compute node potentials that eliminate negative costs.<br>2. Use <strong>Dijkstra's algorithm</strong> (fast, efficient) to find the cheapest augmenting path from source to sink.<br>3. Push flow (assign jobs) along that path.<br>4. Repeat until all feasible jobs are assigned or capacity is exhausted.<br>Because the network is <strong>totally unimodular</strong>, the solution is guaranteed to be integer — meaning whole GPUs assigned to whole jobs, no fractional assignments. Complexity: <strong>O(n·m·log n)</strong> per epoch." },
+        { "label": "Step 4 — Handle Multi-GPU Batch Jobs", "detail": "Batch jobs often need <strong>4–8 GPUs simultaneously</strong>, ideally on adjacent machines for fast inter-GPU communication. The solver handles this via <strong>chain decomposition</strong>: a multi-GPU job is modeled as a chain of linked arcs, forcing the solver to place all units on nearby machine-slots. This preserves placement cohesion without special-casing — the network structure itself encodes the adjacency requirement." },
+        { "label": "Step 5 — Validate Against Benchmarks", "detail": "The algorithm is validated against three independent sources:<br>• <strong>DIMACS benchmark library</strong> — standard network flow test problems of varying size and density, verifying algorithm correctness.<br>• <strong>Alibaba Cluster Trace 2018</strong> — real production workload data (~22,000 jobs) with actual arrival patterns, durations, and resource requirements.<br>• <strong>Microsoft Philly Trace</strong> — a second real-world cluster trace with different (more GPU-heavy) workload characteristics.<br>Solutions are cross-checked against <strong>Gurobi's LP solver</strong> to confirm optimality — if both produce the same answer, the SSP implementation is correct." }
+      ],
+      "techStack": ["Python", "NetworkX", "Google OR-Tools", "Gurobi", "SimPy", "NumPy", "Matplotlib"]
+    },
+    "results": {
+      "heading": "Expected Outcomes",
+      "text": "This project is currently in progress. The expected contribution is a scheduling system that produces provably optimal GPU assignments — not approximations — in real-time.",
+      "highlights": [
+        "<strong>Provably optimal, not approximate:</strong> Unlike heuristic schedulers (FIFO, SJF) that handle jobs one-at-a-time, the MCF solver considers <em>all</em> pending jobs and <em>all</em> available machines simultaneously and finds the mathematically best assignment. The total unimodularity property guarantees this without expensive search.",
+        "<strong>Three competing goals, one solve:</strong> Utilization, fairness, and latency are normally handled by separate systems or ad-hoc priority rules. The MCF cost function encodes all three into a single optimization — the solver automatically balances them based on tunable weights.",
+        "<strong>Fast enough for real-time use:</strong> The SSP algorithm with Johnson's reweighting runs in O(n·m·log n) time — fast enough to solve within the 5-minute scheduling epoch, even for a 1,000-unit cluster with hundreds of pending jobs.",
+        "<strong>Validated against real workloads:</strong> The system is benchmarked on actual production cluster traces from Alibaba and Microsoft, not just synthetic data — ensuring the results reflect real-world scheduling conditions."
+      ]
+    },
+    "assumptions": {
+      "heading": "Key Assumptions & Simplifications",
+      "intro": "This model simplifies several aspects of real GPU cluster operations to focus on the core scheduling optimization. Each assumption is a potential extension point.",
+      "items": [
+        "<strong>All GPUs are identical</strong> — the model treats every GPU unit as interchangeable. Real clusters often have mixed hardware generations (e.g., A100 vs H100) with different performance characteristics.",
+        "<strong>Job resource requirements are known in advance</strong> — each job declares exactly how many GPUs it needs. In practice, resource requirements may be estimated or change during execution.",
+        "<strong>No job preemption</strong> — once a job is assigned to machines, it runs to completion. The scheduler cannot pause and relocate a running job to make room for a higher-priority arrival.",
+        "<strong>Network topology is flat</strong> — all machine-to-machine communication is treated equally. Real data centers have hierarchical networks (rack, pod, spine) where co-location within a rack is faster than across racks.",
+        "<strong>Jobs are independent</strong> — no dependencies between jobs (e.g., \"Job B can't start until Job A finishes\"). Real workloads often have DAG-structured dependencies.",
+        "<strong>5-minute scheduling epoch is fixed</strong> — the batching interval is not adaptive. Under light load, solving less frequently would suffice; under bursts, more frequent solving might help Real-Time SLA compliance.",
+        "<strong>Tenant quotas are static</strong> — contractual minimums and burst limits don't change over the simulation period. Real contracts may include time-of-day or dynamic pricing adjustments.",
+        "<strong>No machine failures</strong> — all 125 nodes are available throughout operation. Real clusters experience hardware failures, maintenance windows, and partial degradation."
+      ]
+    },
+    "images": [],
+    "github": "https://github.com/arnav-chudiwale"
+  },
+  {
+    "slug": "mcf-simulation",
+    "title": "GPU Cluster Scheduling Policy Evaluation via Simulation",
+    "subtitle": "Discrete-Event Simulation Comparing FIFO, SJF, and MCF Policies",
+    "tag": "In Progress",
+    "date": "2026",
+    "oneLiner": "Building a discrete-event simulation to evaluate whether MCF scheduling's mathematical optimality translates to real-world performance gains over simple heuristics.",
+    "cardImage": "/images/projects/simulation.jpg",
+    "hero": "/images/projects/mcf-simulation/hero.svg",
+    "metrics": [
+      { "value": "30", "label": "Day Simulation" },
+      { "value": "3", "label": "Policies Compared" },
+      { "value": "5", "label": "Performance Metrics" }
+    ],
+    "problem": {
+      "heading": "The Problem",
+      "text": "",
+      "bullets": [
+        "The <strong>MCF Network Scheduling</strong> project (above) designs an algorithm that finds <em>provably optimal</em> GPU assignments — but proving something is mathematically optimal doesn't mean it will work better in practice. This project asks: <strong>does MCF actually outperform simpler policies when jobs arrive continuously over 30 days?</strong>",
+        "Here's the tension: MCF solves a full optimization every <strong>5 minutes</strong> — during that 5-minute window, arriving jobs sit in a queue waiting for the next solve. By contrast, simpler policies like <strong>FIFO</strong> (first-come-first-served) and <strong>SJF</strong> (shortest-job-first) dispatch jobs <em>instantly</em> as they arrive. The MCF assignments are better quality, but the jobs wait longer to start. <strong>Which effect wins?</strong>",
+        "To answer this, we need a <strong>controlled experiment</strong> — run the exact same job stream through all three schedulers and compare the outcomes. But running real experiments on a 1,000-GPU cluster is expensive and practically impossible. The solution: build a <strong>discrete-event simulation</strong> that faithfully models the cluster, the job arrivals, and all three scheduling policies.",
+        "The simulation must capture realistic complexity: <strong>three job types</strong> with different arrival rates and resource requirements, <strong>five tenants</strong> with contractual guarantees, <strong>stochastic arrivals</strong> (jobs don't arrive on a fixed schedule — they follow random patterns fitted from real production data), and <strong>five competing performance metrics</strong> (GPU idle cost, SLA compliance, fairness, utilization, and wait time).",
+        "Beyond the head-to-head comparison, the simulation also answers: <strong>under what conditions does MCF's advantage grow or shrink?</strong> When the cluster is lightly loaded (lots of spare capacity), all policies perform similarly. When the cluster is near saturation, smart placement matters much more. Sensitivity analysis across traffic intensities and job-type mixes reveals exactly where MCF earns its keep."
+      ],
+      "context": "30-day simulation horizon · 3 scheduling policies (FIFO, SJF, MCF) · Poisson job arrivals · Log-normal processing times · 5 output metrics · Sensitivity across 3 load levels × 3 job-mix ratios"
+    },
+    "method": {
+      "heading": "The Approach",
+      "bullets": [
+        "<strong>Discrete-event simulation</strong> means the model doesn't tick through every second of the 30-day period. Instead, it jumps directly from one event to the next — a job arriving, a job finishing, a scheduling epoch triggering. This makes it computationally efficient while capturing the exact same dynamics as real operation.",
+        "<strong>Stochastic inputs from real data:</strong> Job arrival times follow a <strong>Poisson process</strong> (events occur randomly and independently — the same pattern observed in real cluster traces). Job processing durations follow a <strong>log-normal distribution</strong> (most jobs are short, but some are very long — also matching real data). Both distributions are fitted from <strong>Alibaba Cluster Trace 2018</strong> and <strong>Microsoft Philly Trace</strong> production data.",
+        "<strong>Common random numbers</strong> — all three policies receive the <em>exact same sequence</em> of randomly generated jobs (same arrival times, same durations, same resource requirements). This ensures any performance difference is caused by the scheduling policy, not by random variation in the workload. It's the simulation equivalent of a controlled experiment.",
+        "The primary cost metric is <strong>GPU idle cost at $2/unit-hour</strong>: every GPU-hour that sits unused costs $2 in wasted electricity and capital depreciation. Over 30 days with 1,000 GPUs, the maximum idle cost would be $1.44 million — so even small utilization differences translate to large dollar amounts."
+      ],
+      "flowchart": [
+        { "label": "Step 1 — Fit Input Distributions", "detail": "Analyze real production cluster traces (Alibaba, Microsoft Philly) to fit statistical distributions:<br>• <strong>Inter-arrival times</strong> → Poisson process (calibrated separately for Batch, Real-Time, and Medium jobs)<br>• <strong>Processing durations</strong> → Log-normal distribution (captures the heavy tail — most jobs short, some very long)<br>• <strong>Resource requirements</strong> → Empirical distribution from trace data (1–8 GPU units per job)<br>All distribution parameters are estimated using maximum likelihood estimation and validated with goodness-of-fit tests." },
+        { "label": "Step 2 — Build the Simulation Model", "detail": "The simulation models the cluster as a <strong>shared-capacity server pool</strong> with 1,000 GPU units across 125 physical nodes. Three independent job generators feed a shared pending queue. Each generator creates jobs according to its fitted Poisson rate and assigns resource requirements from the empirical distribution. The simulation clock advances event-by-event: job arrivals, job completions, and 5-minute scheduling triggers." },
+        { "label": "Step 3 — Implement Three Scheduling Policies", "detail": "Each policy uses the same queue of pending jobs but assigns them differently:<br>• <strong>FIFO</strong> — assigns jobs in arrival order, greedily placing each on the first available machine. Instant dispatch, no batching delay.<br>• <strong>SJF</strong> — sorts pending jobs by estimated duration (shortest first), then greedily assigns. Also instant dispatch.<br>• <strong>MCF</strong> — every 5 minutes, collects all pending jobs and solves the full Minimum Cost Flow optimization from Project 1, producing an optimal batch assignment.<br>All three operate on the <strong>same random number stream</strong> for fair comparison." },
+        { "label": "Step 4 — Determine Warm-Up Period", "detail": "The simulation starts \"cold\" — all GPUs are idle, no jobs are in progress. This initial transient doesn't represent steady-state behavior and would bias the statistics. <strong>Welch's method</strong> is used to identify the warm-up period: run multiple replications, compute the moving average of key metrics over time, and identify where the average stabilizes. Statistics are only collected <em>after</em> this warm-up window to ensure they reflect steady-state performance." },
+        { "label": "Step 5 — Collect Five Performance Metrics", "detail": "After warm-up, the simulation tracks five metrics for each policy:<br>• <strong>GPU Idle Cost ($)</strong> — total dollar cost of unused GPU-hours at $2/unit-hr (primary metric)<br>• <strong>SLA Compliance (%)</strong> — percentage of Real-Time jobs dispatched within 100ms of arrival<br>• <strong>Jain's Fairness Index</strong> — measures how evenly resources are distributed across 5 tenants (1.0 = perfectly fair)<br>• <strong>GPU Utilization (%)</strong> — fraction of total GPU-hours actually used by jobs<br>• <strong>Mean Wait Time</strong> — average time a job spends in queue before starting execution" },
+        { "label": "Step 6 — Run Sensitivity Analysis", "detail": "The head-to-head comparison is repeated under <strong>9 different operating conditions</strong> (3 load levels × 3 job-mix ratios):<br>• <strong>Traffic intensity (ρ)</strong>: 0.60 (light load — 40% spare capacity), 0.80 (moderate — 20% spare), 0.95 (near-saturation — only 5% spare)<br>• <strong>Real-Time job proportion</strong>: 10%, 20%, and 40% of all arriving jobs<br>This reveals where MCF's optimization advantage is largest (likely at high ρ and high RT proportion, where placement quality matters most)." },
+        { "label": "Step 7 — Dual-Platform Validation", "detail": "The entire simulation is built in <strong>two independent platforms</strong>: a custom Python model (using <strong>SimPy</strong> for event scheduling) and a recreated model in <strong>Simio</strong> (a commercial simulation package with visual animation). If both platforms produce statistically equivalent results under the same inputs and random seeds, we have high confidence the simulation logic is correct — any bugs in one implementation would be caught by the other." }
+      ],
+      "techStack": ["Python", "SimPy", "Simio", "SciPy", "Pandas", "NumPy", "Matplotlib", "Seaborn"]
+    },
+    "results": {
+      "heading": "Research Questions",
+      "text": "This simulation will answer four core questions, with GPU idle cost ($2/unit-hr) as the primary economic metric.",
+      "highlights": [
+        "<strong>Which policy minimizes GPU idle cost?</strong> Over a 30-day horizon with 1,000 GPUs at $2/unit-hr, even a 5% utilization improvement saves ~$72,000. The simulation measures whether MCF's smarter placement translates to measurably lower idle cost compared to FIFO and SJF.",
+        "<strong>Which policy best meets the 100ms Real-Time SLA?</strong> FIFO and SJF dispatch instantly but may place jobs poorly; MCF places optimally but introduces a batching delay. The simulation reveals which effect dominates for Real-Time job compliance.",
+        "<strong>Which policy most fairly distributes resources across tenants?</strong> Jain's Fairness Index (0 to 1) measures whether all five tenants consistently receive at least their contractual GPU quota. MCF explicitly encodes fairness constraints; FIFO and SJF do not.",
+        "<strong>Does MCF's advantage grow under stress?</strong> The sensitivity analysis reveals whether MCF's edge is negligible at light load (ρ = 0.60) but substantial near saturation (ρ = 0.95) — identifying the operating conditions where the optimization investment pays off."
+      ]
+    },
+    "assumptions": {
+      "heading": "Key Assumptions & Simplifications",
+      "intro": "The simulation simplifies several aspects of real cluster operations to isolate the scheduling policy comparison. Each assumption constrains the generalizability of the results.",
+      "items": [
+        "<strong>Stationary arrival rates</strong> — the Poisson arrival rate doesn't change over the 30-day period. Real workloads have daily and weekly patterns (more jobs submitted during working hours), which could affect the relative performance of batching vs. instant dispatch.",
+        "<strong>No job cancellations or failures</strong> — every submitted job runs to completion. In practice, users cancel jobs, jobs crash mid-execution, and machines fail — all of which free resources unexpectedly and might benefit policies that can react quickly.",
+        "<strong>Processing times are independent</strong> — each job's duration is drawn independently from the log-normal distribution. Real workloads may have correlated durations (e.g., a batch of similar training jobs submitted together).",
+        "<strong>$2/unit-hour idle cost is fixed</strong> — the economic model uses a constant GPU cost. Real costs vary by region, spot vs. on-demand pricing, and hardware generation.",
+        "<strong>Warm-up period is sufficient</strong> — Welch's method identifies a reasonable warm-up, but transient effects from rare extreme events (e.g., a burst of 100 large batch jobs) might not be fully captured.",
+        "<strong>No learning or adaptation</strong> — the scheduling policies are fixed throughout the simulation. Real systems might adapt their parameters over time (e.g., adjusting the MCF cost weights based on observed performance).",
+        "<strong>Network topology is ignored</strong> — the simulation models GPUs as a shared capacity pool without rack-level or pod-level structure. Real clusters have hierarchical networks where co-location within a rack provides lower latency.",
+        "<strong>Perfect job duration estimates</strong> — SJF and MCF assume the scheduler knows each job's processing time in advance. In practice, duration estimates are often inaccurate, which would degrade SJF's effectiveness more than MCF's."
+      ]
+    },
+    "images": [],
+    "github": "https://github.com/arnav-chudiwale"
+  }
+]

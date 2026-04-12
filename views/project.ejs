@@ -1,0 +1,653 @@
+<%- include('partials/head', { pageTitle: project.title }) %>
+<body>
+  <%- include('partials/nav') %>
+
+  <!-- PROJECT HERO -->
+  <section class="project-hero<%= project.heroVideo ? ' project-hero--video' : '' %>">
+    <% if (project.heroVideo) { %>
+    <video class="project-hero__video" autoplay muted loop playsinline>
+      <source src="<%= project.heroVideo %>" type="video/mp4">
+    </video>
+    <div class="project-hero__overlay"></div>
+    <% } %>
+    <div class="container">
+      <a href="/#projects" class="project-hero__back">&larr; All Projects</a>
+      <div class="project-hero__tags">
+        <span class="tag tag--<%= project.tag === 'Completed' ? 'gold' : 'outline' %>"><%= project.tag %></span>
+        <span class="tag tag--muted"><%= project.date %></span>
+      </div>
+      <h1 class="project-hero__title"><%= project.title %></h1>
+      <p class="project-hero__subtitle"><%= project.subtitle %></p>
+    </div>
+  </section>
+
+  <!-- METRICS BAR -->
+  <section class="metrics-bar">
+    <div class="container">
+      <div class="metrics-bar__grid">
+        <% project.metrics.forEach(m => { %>
+        <div class="metric">
+          <span class="metric__value"><%= m.value %></span>
+          <span class="metric__label"><%= m.label %></span>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="section section--navy case-block">
+    <div class="container">
+      <h2 class="section__title section__title--light"><%= project.problem.heading %></h2>
+      <% if (project.problem.bullets) { %>
+      <ul class="problem-bullets">
+        <% project.problem.bullets.forEach(b => { %>
+        <li class="problem-bullets__item"><%- b %></li>
+        <% }) %>
+      </ul>
+      <% } else { %>
+      <p class="case-block__text"><%= project.problem.text %></p>
+      <% } %>
+      <div class="case-block__context">
+        <span class="case-block__context-label">Scope</span>
+        <p><%= project.problem.context %></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE DEMO (embedded, right after Problem) -->
+  <% if (project.hasDemo) { %>
+  <section class="section section--gray case-block">
+    <div class="container">
+      <h2 class="section__title">Interactive Demo</h2>
+      <p class="case-block__text">Enter a portfolio value and transaction cost, then run the simulation to compare ML risk-adjusted, momentum, and equal-weight strategies across June 2025.</p>
+
+      <!-- Demo Context Block -->
+      <div class="strategy-context fade-up">
+        <div class="strategy-context__header">
+          <h3 class="strategy-context__title">What does this demo do?</h3>
+          <p class="strategy-context__intro">This simulator runs a real portfolio allocation engine on S&P 500 stocks using June 2025 market data. You start with a portfolio value, and the system <strong>rebalances weekly</strong> — deciding how much capital to assign to each of 503 stocks. The core question: <strong>does using ML crash-probability predictions to reduce exposure to risky stocks actually improve returns?</strong> We test this against two baselines.</p>
+        </div>
+        <ol class="strategy-context__list">
+          <li>
+            <strong>ML Risk-Adjusted Momentum</strong>
+            <span>The primary strategy. A LightGBM model predicts each stock's 5-day crash probability using 100+ features (volatility, gaps, volume, trend shape). Stocks with high crash risk get their weight reduced toward zero; stocks with strong momentum <em>and</em> low risk get the largest allocations. This is risk-aware momentum — it chases upside but pulls back when danger signals appear.</span>
+          </li>
+          <li>
+            <strong>Pure Momentum</strong>
+            <span>Allocates capital proportionally to each stock's 20-day price momentum — the stronger the recent uptrend, the larger the position. Ignores crash risk entirely. This is one of the strongest known return factors in equities, making it a hard benchmark to beat.</span>
+          </li>
+          <li class="strategy-context__item--infeasible">
+            <strong>Equal-Weight (Naive Baseline)</strong>
+            <span>Every stock receives the same share of capital regardless of trend, risk, or any signal. This is the simplest possible strategy — if the ML system can't beat equal-weight, it adds no value.</span>
+          </li>
+        </ol>
+      </div>
+
+      <!-- Controls -->
+      <div class="demo-panel fade-up">
+        <h3 class="demo-panel__title">Simulation Inputs</h3>
+        <div class="demo-controls">
+          <div class="demo-field">
+            <label for="demoInitial">Initial Portfolio ($)</label>
+            <input type="number" id="demoInitial" value="1000000" min="10000" step="1000">
+          </div>
+          <div class="demo-field">
+            <label for="demoCost">Transaction Cost (%)</label>
+            <input type="number" id="demoCost" value="0.10" min="0" step="0.01">
+          </div>
+          <div class="demo-field demo-field--check">
+            <label><input type="checkbox" id="demoRandomize"> Randomize initial view</label>
+          </div>
+          <button class="btn btn--gold demo-btn" id="demoLoadBtn">Load Weights</button>
+          <button class="btn btn--outline-navy demo-btn" id="demoSimBtn" disabled>Run Simulation</button>
+        </div>
+      </div>
+
+      <!-- Initial Allocation -->
+      <div class="demo-panel fade-up" id="demoInitSection" style="display:none;">
+        <h3 class="demo-panel__title">Initial Allocation — ML Strategy</h3>
+        <p class="demo-panel__sub" id="demoInitInfo"></p>
+        <div class="demo-search">
+          <input type="text" id="demoSearch" placeholder="Search by ticker or name…">
+        </div>
+        <div class="demo-table-scroll">
+          <table class="demo-table">
+            <thead><tr><th>Ticker</th><th>Name</th><th>Weight (%)</th><th>Capital ($)</th></tr></thead>
+            <tbody id="demoInitBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ML Results -->
+      <div class="demo-panel fade-up" id="demoMLSection" style="display:none;">
+        <h3 class="demo-panel__title">ML Strategy — Simulation Results</h3>
+        <div class="demo-metrics" id="demoMLMetrics"></div>
+        <div class="demo-celebrate" id="demoMLCelebrate"></div>
+
+        <h4 class="demo-panel__subtitle">Risk vs Return — ML vs Momentum</h4>
+        <p class="demo-panel__sub">Lower volatility and drawdown, higher return/risk = calmer, more efficient portfolio.</p>
+        <div class="demo-metrics" id="demoRiskMetrics"></div>
+
+        <h4 class="demo-panel__subtitle">Final Allocation — ML Strategy</h4>
+        <div class="demo-table-scroll">
+          <table class="demo-table">
+            <thead><tr><th>Ticker</th><th>Name</th><th>Final Weight (%)</th><th>Final Capital ($)</th></tr></thead>
+            <tbody id="demoMLBody"></tbody>
+          </table>
+        </div>
+
+        <div class="demo-compare-row">
+          <button class="btn btn--outline-navy demo-btn" id="demoCompareMom">Compare: Momentum</button>
+          <button class="btn btn--outline-navy demo-btn" id="demoCmpEq">Compare: Equal-Weight</button>
+        </div>
+      </div>
+
+      <!-- Momentum Comparison -->
+      <div class="demo-panel fade-up" id="demoMomSection" style="display:none;">
+        <h3 class="demo-panel__title">Momentum Strategy — Comparison</h3>
+        <div class="demo-metrics" id="demoMomMetrics"></div>
+        <div class="demo-celebrate" id="demoMomCelebrate"></div>
+        <h4 class="demo-panel__subtitle">Final Allocation — Momentum</h4>
+        <div class="demo-table-scroll">
+          <table class="demo-table">
+            <thead><tr><th>Ticker</th><th>Name</th><th>Weight (%)</th><th>Capital ($)</th></tr></thead>
+            <tbody id="demoMomBody"></tbody>
+          </table>
+        </div>
+        <p class="demo-explain">Momentum allocates more capital to stocks with strong recent trends — ignoring crash risk. We benchmark against it because it's one of the strongest known return factors in equities.</p>
+      </div>
+
+      <!-- Equal-Weight Comparison -->
+      <div class="demo-panel fade-up" id="demoEqSection" style="display:none;">
+        <h3 class="demo-panel__title">Equal-Weight Strategy — Comparison</h3>
+        <div class="demo-metrics" id="demoEqMetrics"></div>
+        <div class="demo-celebrate" id="demoEqCelebrate"></div>
+        <h4 class="demo-panel__subtitle">Final Allocation — Equal-Weight</h4>
+        <div class="demo-table-scroll">
+          <table class="demo-table">
+            <thead><tr><th>Ticker</th><th>Name</th><th>Weight (%)</th><th>Capital ($)</th></tr></thead>
+            <tbody id="demoEqBody"></tbody>
+          </table>
+        </div>
+        <p class="demo-explain">Equal-weight gives every stock the same share, ignoring trend or risk. If the ML strategy can't beat this, it has no practical value.</p>
+      </div>
+
+    </div>
+  </section>
+  <script src="/js/sp500-demo.js"></script>
+  <% } %>
+
+  <!-- METHOD -->
+  <section class="section section--light case-block">
+    <div class="container">
+      <h2 class="section__title"><%= project.method.heading %></h2>
+      <% if (project.method.bullets) { %>
+      <ul class="approach-bullets">
+        <% project.method.bullets.forEach(b => { %>
+        <li class="approach-bullets__item"><%- b %></li>
+        <% }) %>
+      </ul>
+      <% } else { %>
+      <p class="case-block__text"><%= project.method.text %></p>
+      <% } %>
+
+      <% if (project.method.flowchart) { %>
+      <div class="flowchart fade-up">
+        <% project.method.flowchart.forEach((node, i) => { %>
+        <div class="flowchart__node">
+          <div class="flowchart__label"><%= node.label %></div>
+          <p class="flowchart__detail"><%- node.detail %></p>
+        </div>
+        <% if (i < project.method.flowchart.length - 1) { %>
+        <div class="flowchart__arrow">
+          <svg width="20" height="28" viewBox="0 0 20 28"><path d="M10 0 L10 20 M4 14 L10 22 L16 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <% } %>
+        <% }) %>
+      </div>
+      <% } else { %>
+      <div class="method-steps fade-up">
+        <% project.method.steps.forEach((step, i) => { %>
+        <div class="method-step">
+          <span class="method-step__num"><%= String(i + 1).padStart(2, '0') %></span>
+          <p class="method-step__text"><%= step %></p>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+      <div class="tech-stack">
+        <h3 class="tech-stack__label">Tech Stack</h3>
+        <div class="tech-stack__pills">
+          <% project.method.techStack.forEach(t => { %>
+          <span class="pill pill--dark"><%= t %></span>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCGIS MAP -->
+  <% if (project.arcgisMap) { %>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/dark/main.css">
+  <section class="section section--navy case-block" id="arcgis-map-section">
+    <div class="container">
+      <h2 class="section__title section__title--light"><%= project.arcgisMap.title %></h2>
+      <ul class="arcgis-map__writeup">
+        <li><strong>What this map shows:</strong> ArcGIS Network Analyst's Location-Allocation solver evaluated all 5 candidate facilities against 54 Apple Store demand points on California's <strong>real road network</strong>. The solver minimized total weighted impedance (demand × network distance) to find the geographically optimal facility placement. Gold diamonds are candidate sites, white dots are stores (scaled by return volume), and gold lines are assignment routes.</li>
+        <li><strong>ArcGIS result:</strong> The solver selected <strong>1 facility — Ontario (LA Metro)</strong> — and assigned all 54 stores to it. This is the distance-optimal answer: Ontario sits at the geographic center of California's retail density. But it exceeds the 25,000-unit facility capacity (28,140 units), making it <strong>operationally infeasible</strong>.</li>
+        <li><strong>Why the final recommendation differs:</strong> When the full cost structure enters the model (Gurobi MIP), the answer flips. Facility fixed costs range from $720K (Reno) to $1.05M (Fremont) per year, while total annual freight is only $1,251 — just <strong>0.08% of fixed costs</strong>. The cost-optimal solution selects <strong>Fresno + Reno</strong>: two lower-cost inland sites that save $490K/year in fixed costs versus coastal alternatives, even though average shipping distance increases.</li>
+        <li><strong>Role in the pipeline:</strong> This ArcGIS analysis was Phase 1 — geographic validation. It confirmed candidate site coverage, generated spatial inputs for the Gurobi models, and demonstrated exactly why distance-only optimization is insufficient for facility location decisions where fixed costs dominate.</li>
+      </ul>
+    </div>
+    <div class="arcgis-map-wrap">
+      <div id="arcgisMapView" class="arcgis-map"></div>
+      <div class="arcgis-map__legend">
+        <div class="arcgis-map__legend-item"><span class="arcgis-map__dot arcgis-map__dot--facility"></span> Refurbishment Facility</div>
+        <div class="arcgis-map__legend-item"><span class="arcgis-map__dot arcgis-map__dot--store"></span> Store Location</div>
+        <div class="arcgis-map__legend-item"><span class="arcgis-map__line"></span> Assignment Route</div>
+      </div>
+    </div>
+  </section>
+  <script src="https://js.arcgis.com/4.29/"></script>
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer"
+    ], function(Map, MapView, FeatureLayer) {
+      const serviceUrl = "<%= project.arcgisMap.featureServerUrl %>";
+
+      const map = new Map({ basemap: "dark-gray-vector" });
+
+      const view = new MapView({
+        container: "arcgisMapView",
+        map: map,
+        center: [-119.5, 36.5],
+        zoom: 6,
+        ui: { components: ["zoom"] },
+        constraints: { minZoom: 5 },
+        popup: { dockEnabled: true, dockOptions: { buttonEnabled: false, breakpoint: false, position: "bottom-right" } }
+      });
+
+      // Routes (bottom layer — draw first)
+      const routesLayer = new FeatureLayer({
+        url: serviceUrl + "/2",
+        renderer: {
+          type: "simple",
+          symbol: {
+            type: "simple-line",
+            color: [200, 169, 81, 0.35],
+            width: 1.5,
+            style: "solid"
+          }
+        },
+        opacity: 0.8
+      });
+
+      // Stores
+      const storesLayer = new FeatureLayer({
+        url: serviceUrl + "/1",
+        renderer: {
+          type: "simple",
+          symbol: {
+            type: "simple-marker",
+            style: "circle",
+            color: [255, 255, 255, 0.9],
+            size: 7,
+            outline: { color: [200, 169, 81, 0.8], width: 1.5 }
+          }
+        },
+        popupTemplate: {
+          title: "{Name}",
+          content: [{ type: "fields", fieldInfos: [
+            { fieldName: "Demand", label: "Annual Returns" },
+            { fieldName: "FacilityOID", label: "Assigned Facility" }
+          ]}]
+        }
+      });
+
+      // Facilities (top layer)
+      const facilitiesLayer = new FeatureLayer({
+        url: serviceUrl + "/0",
+        renderer: {
+          type: "simple",
+          symbol: {
+            type: "simple-marker",
+            style: "diamond",
+            color: [200, 169, 81, 1],
+            size: 16,
+            outline: { color: [255, 255, 255, 1], width: 2.5 }
+          }
+        },
+        popupTemplate: {
+          title: "{Name}",
+          content: [{ type: "fields", fieldInfos: [
+            { fieldName: "FacilityType", label: "Status" },
+            { fieldName: "Capacity", label: "Capacity" }
+          ]}]
+        }
+      });
+
+      map.addMany([routesLayer, storesLayer, facilitiesLayer]);
+    });
+  </script>
+  <% } %>
+
+  <!-- FOLIUM MAP -->
+  <% if (project.foliumMap) { %>
+  <section class="section section--navy case-block" id="folium-map-section">
+    <div class="container">
+      <h2 class="section__title section__title--light"><%= project.foliumMap.title %></h2>
+      <ul class="arcgis-map__writeup">
+        <li><strong>What this map shows:</strong> The baseline Vehicle Routing Problem (VRP) solution for normal-day operations — 32 in-house delivery vans serving <strong>500 delivery locations</strong> across 8 urban neighborhoods in New York City, dispatched from a single central depot.</li>
+        <li><strong>How the data was generated:</strong> 500 delivery points were randomly generated around 8 cluster centers within a 10km radius of the depot (40.7128°N, 74.0060°W). Each location has base demand (~3 packages) and peak demand (~8 packages). Distances between all 501 points (500 locations + depot) were computed as a full matrix using Haversine formula with urban routing factors.</li>
+        <li><strong>How the routes were solved:</strong> Google OR-Tools' Capacitated Vehicle Routing Problem (VRP) solver assigned each of the 32 vehicles (50 packages/van capacity) an optimal route minimizing total distance traveled while respecting capacity constraints. The solver produces the exact route sequence — depot → stops → depot — for each vehicle.</li>
+        <li><strong>What to look for:</strong> Each colored line is one vehicle's route. Click any route to see the vehicle ID, number of stops, distance (km), and package load. The <strong>red warehouse icon</strong> is the depot. Colored dots are delivery stops. Notice how routes form tight neighborhood clusters — the solver avoids cross-city detours.</li>
+        <li><strong>Why this matters:</strong> This baseline establishes the <strong>normal operating cost and fleet utilization</strong> before any demand surge. When peak season hits (162% demand increase), this same fleet can't cover the volume — which drives the entire capacity crisis analysis and multi-strategy optimization that follows.</li>
+      </ul>
+    </div>
+    <div class="folium-map-wrap">
+      <iframe src="<%= project.foliumMap.src %>" class="folium-map" title="<%= project.foliumMap.sectionName %>" loading="lazy"></iframe>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- RESULTS -->
+  <section class="section section--light case-block">
+    <div class="container">
+      <h2 class="section__title"><%= project.results.heading %></h2>
+      <p class="case-block__text"><%- project.results.text %></p>
+      <ul class="results-list fade-up">
+        <% project.results.highlights.forEach(h => { %>
+        <li class="results-list__item"><%- h %></li>
+        <% }) %>
+      </ul>
+    </div>
+  </section>
+
+  <!-- FINANCIAL VALIDATION -->
+  <% if (project.financialValidation) { %>
+  <section class="section section--navy case-block">
+    <div class="container">
+      <h2 class="section__title section__title--light"><%= project.financialValidation.heading %></h2>
+      <p class="case-block__text case-block__text--light"><%- project.financialValidation.intro %></p>
+      <div class="fin-validation fade-up">
+        <% project.financialValidation.sections.forEach(s => { %>
+        <div class="fin-validation__card">
+          <h3 class="fin-validation__title"><%- s.title %></h3>
+          <p class="fin-validation__text"><%- s.text %></p>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- ASSUMPTIONS -->
+  <% if (project.assumptions) { %>
+  <section class="section section--light case-block">
+    <div class="container">
+      <h2 class="section__title"><%= project.assumptions.heading %></h2>
+      <p class="case-block__text"><%= project.assumptions.intro %></p>
+      <ul class="assumptions-list fade-up">
+        <% project.assumptions.items.forEach(a => { %>
+        <li class="assumptions-list__item"><%- a %></li>
+        <% }) %>
+      </ul>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- INTERACTIVE STRATEGY COMPARISON (Last-Mile only) -->
+  <% if (project.results.strategyComparison) { %>
+  <section class="section section--gray case-block">
+    <div class="container">
+      <h2 class="section__title">Interactive Strategy Dashboard</h2>
+      <p class="case-block__text">6 strategies evaluated across cost, service level, and outsourcing metrics. Hover over charts for details.</p>
+
+      <!-- Strategy Context Block -->
+      <div class="strategy-context fade-up">
+        <div class="strategy-context__header">
+          <h3 class="strategy-context__title">What are we evaluating?</h3>
+          <p class="strategy-context__intro">During peak season, demand surges 162% — from 1,490 to 3,906 packages — far exceeding the 32-van fleet's 1,600-package capacity. The question: <strong>how should the excess 2,306 packages be handled each day?</strong> We evaluate 6 strategies that trade off overtime hours, third-party outsourcing, and penalty risk.</p>
+        </div>
+        <ol class="strategy-context__list">
+          <li>
+            <strong>Hybrid (OT: 2.0h + Outsource)</strong>
+            <span>Extend driver shifts by 2 hours, outsource the remaining overflow to 3PL. Maximizes in-house throughput before outsourcing.</span>
+          </li>
+          <li>
+            <strong>Hybrid (OT: 1.6h + Outsource)</strong>
+            <span>1.6-hour overtime cap with 3PL backup. Slightly less overtime, marginally higher outsourcing share.</span>
+          </li>
+          <li>
+            <strong>Hybrid (OT: 1.2h + Outsource)</strong>
+            <span>1.2-hour overtime cap. Balances driver fatigue against outsourcing cost — a moderate middle ground.</span>
+          </li>
+          <li>
+            <strong>Hybrid (OT: 0.8h + Outsource)</strong>
+            <span>Minimal overtime (0.8h), majority of overflow outsourced. Preserves driver capacity at higher 3PL expense.</span>
+          </li>
+          <li>
+            <strong>Outsource All Overflow</strong>
+            <span>Zero overtime — every package beyond base capacity goes to 3PL. Simplest to manage, but highest outsourcing cost.</span>
+          </li>
+          <li class="strategy-context__item--infeasible">
+            <strong>Overtime Only (10h shifts)</strong>
+            <span>No outsourcing — extend all shifts to 10 hours. Fleet still can't cover the full surge: only 50.8% service level, incurring $34,596 in late-delivery penalties. <em>Not feasible.</em></span>
+          </li>
+        </ol>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="strategy-summary fade-up">
+        <div class="strategy-card strategy-card--best">
+          <span class="strategy-card__label">Best Strategy</span>
+          <span class="strategy-card__value">Hybrid (2.0h OT + Outsource)</span>
+        </div>
+        <div class="strategy-card">
+          <span class="strategy-card__label">Lowest Cost</span>
+          <span class="strategy-card__value">$36,651</span>
+        </div>
+        <div class="strategy-card">
+          <span class="strategy-card__label">Strategies Analyzed</span>
+          <span class="strategy-card__value">6</span>
+        </div>
+      </div>
+
+      <!-- Charts Grid -->
+      <div class="strategy-charts fade-up">
+        <div class="strategy-chart-box">
+          <h3 class="strategy-chart-box__title">Total Cost by Strategy</h3>
+          <canvas id="costChart"></canvas>
+        </div>
+        <div class="strategy-chart-box">
+          <h3 class="strategy-chart-box__title">Service Level Achievement</h3>
+          <canvas id="serviceChart"></canvas>
+        </div>
+        <div class="strategy-chart-box">
+          <h3 class="strategy-chart-box__title">Cost Breakdown (Stacked)</h3>
+          <canvas id="breakdownChart"></canvas>
+        </div>
+        <div class="strategy-chart-box">
+          <h3 class="strategy-chart-box__title">Outsourcing Percentage</h3>
+          <canvas id="outsourceChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Detailed Table -->
+      <div class="strategy-table-wrap fade-up">
+        <h3 class="strategy-table-title">Detailed Strategy Comparison</h3>
+        <div class="strategy-table-scroll">
+          <table class="strategy-table">
+            <thead>
+              <tr>
+                <th>Strategy</th>
+                <th>Total Cost</th>
+                <th>Service Level</th>
+                <th>Outsource %</th>
+                <th>Feasible</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% const sc = project.results.strategyComparison; %>
+              <% sc.strategies.forEach((s, i) => { %>
+              <tr class="<%= i === 0 ? 'strategy-row--best' : '' %>">
+                <td><strong><%= s %></strong></td>
+                <td>$<%= sc.totalCosts[i].toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}) %></td>
+                <td><%= sc.serviceLevels[i].toFixed(1) %>%</td>
+                <td><%= sc.outsourcePcts[i].toFixed(1) %>%</td>
+                <td class="<%= sc.feasible[i] ? 'strategy-feasible' : 'strategy-infeasible' %>"><%= sc.feasible[i] ? '✓ Yes' : '✗ No' %></td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cost Breakdown Table -->
+      <div class="strategy-table-wrap fade-up">
+        <h3 class="strategy-table-title">Cost Component Breakdown</h3>
+        <div class="strategy-table-scroll">
+          <table class="strategy-table">
+            <thead>
+              <tr>
+                <th>Strategy</th>
+                <th>Baseline</th>
+                <th>Overtime</th>
+                <th>Outsource</th>
+                <th>Penalty</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% sc.strategies.forEach((s, i) => { %>
+              <tr>
+                <td><strong><%= s %></strong></td>
+                <td>$<%= sc.baselineCosts[i].toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}) %></td>
+                <td>$<%= sc.overtimeCosts[i].toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}) %></td>
+                <td>$<%= sc.outsourceCosts[i].toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}) %></td>
+                <td>$<%= sc.penaltyCosts[i].toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}) %></td>
+                <td><strong>$<%= sc.totalCosts[i].toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}) %></strong></td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <script>
+    (function() {
+      const data = <%- JSON.stringify(project.results.strategyComparison) %>;
+      const gold = '#C8A951';
+      const goldLight = 'rgba(200,169,81,0.7)';
+      const navy = '#0A1628';
+      const navyMid = '#1A2740';
+      const red = 'rgba(220,80,70,0.75)';
+      const redBorder = 'rgba(220,80,70,1)';
+      const greenBg = data.feasible.map(f => f ? goldLight : red);
+      const greenBdr = data.feasible.map(f => f ? gold : redBorder);
+
+      const chartFont = { family: "'Satoshi', sans-serif", size: 11 };
+      const defaults = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { labels: { font: chartFont, color: navyMid } } },
+        scales: { x: { ticks: { font: { ...chartFont, size: 9 }, color: navyMid, maxRotation: 45 } }, y: { ticks: { font: chartFont, color: navyMid } } }
+      };
+
+      // Total Cost
+      new Chart(document.getElementById('costChart'), {
+        type: 'bar',
+        data: { labels: data.strategies, datasets: [{ label: 'Total Cost ($)', data: data.totalCosts, backgroundColor: greenBg, borderColor: greenBdr, borderWidth: 2 }] },
+        options: { ...defaults, plugins: { ...defaults.plugins, legend: { display: false }, tooltip: { callbacks: { label: ctx => 'Cost: $' + ctx.parsed.y.toLocaleString() } } }, scales: { ...defaults.scales, y: { ...defaults.scales.y, beginAtZero: true, ticks: { ...defaults.scales.y.ticks, callback: v => '$' + v.toLocaleString() } } } }
+      });
+
+      // Service Level
+      new Chart(document.getElementById('serviceChart'), {
+        type: 'bar',
+        data: { labels: data.strategies, datasets: [{ label: 'Service Level (%)', data: data.serviceLevels, backgroundColor: greenBg, borderColor: greenBdr, borderWidth: 2 }] },
+        options: { ...defaults, plugins: { ...defaults.plugins, legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(1) + '%' } } }, scales: { ...defaults.scales, y: { ...defaults.scales.y, beginAtZero: true, max: 110, ticks: { ...defaults.scales.y.ticks, callback: v => v + '%' } } } }
+      });
+
+      // Stacked Cost Breakdown
+      new Chart(document.getElementById('breakdownChart'), {
+        type: 'bar',
+        data: { labels: data.strategies, datasets: [
+          { label: 'Baseline', data: data.baselineCosts, backgroundColor: 'rgba(26,39,64,0.75)', borderColor: navyMid, borderWidth: 1 },
+          { label: 'Overtime', data: data.overtimeCosts, backgroundColor: 'rgba(200,169,81,0.7)', borderColor: gold, borderWidth: 1 },
+          { label: 'Outsource', data: data.outsourceCosts, backgroundColor: 'rgba(120,140,170,0.7)', borderColor: 'rgba(120,140,170,1)', borderWidth: 1 },
+          { label: 'Penalty', data: data.penaltyCosts, backgroundColor: red, borderColor: redBorder, borderWidth: 1 }
+        ]},
+        options: { ...defaults, scales: { x: { ...defaults.scales.x, stacked: true }, y: { ...defaults.scales.y, stacked: true, beginAtZero: true, ticks: { ...defaults.scales.y.ticks, callback: v => '$' + v.toLocaleString() } } }, plugins: { ...defaults.plugins, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString() } } } }
+      });
+
+      // Outsource %
+      new Chart(document.getElementById('outsourceChart'), {
+        type: 'bar',
+        data: { labels: data.strategies, datasets: [{ label: 'Outsourcing (%)', data: data.outsourcePcts, backgroundColor: 'rgba(120,140,170,0.7)', borderColor: 'rgba(120,140,170,1)', borderWidth: 2 }] },
+        options: { ...defaults, plugins: { ...defaults.plugins, legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(1) + '%' } } }, scales: { ...defaults.scales, y: { ...defaults.scales.y, beginAtZero: true, ticks: { ...defaults.scales.y.ticks, callback: v => v + '%' } } } }
+      });
+    })();
+  </script>
+  <% } %>
+
+  <!-- PROJECT IMAGES -->
+  <% if (project.images && project.images.length > 0 && !project.hasDemo) { %>
+  <section class="section section--gray case-block">
+    <div class="container">
+      <h2 class="section__title">Visual Outputs</h2>
+      <p class="gallery-hint">Click any chart to expand</p>
+      <div class="project-gallery">
+        <% project.images.forEach((img, idx) => { %>
+        <figure class="project-gallery__item fade-up" data-lightbox="<%= idx %>">
+          <img src="<%= img.src %>" alt="<%= img.alt %>" loading="lazy">
+          <figcaption><%= img.alt %></figcaption>
+          <div class="project-gallery__overlay">
+            <span class="project-gallery__expand">&#x26F6; Expand</span>
+          </div>
+        </figure>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIGHTBOX MODAL -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
+    <div class="lightbox__backdrop"></div>
+    <button class="lightbox__close" aria-label="Close">&times;</button>
+    <% if (project.images.length > 1) { %>
+    <button class="lightbox__nav lightbox__nav--prev" aria-label="Previous">&lsaquo;</button>
+    <button class="lightbox__nav lightbox__nav--next" aria-label="Next">&rsaquo;</button>
+    <% } %>
+    <div class="lightbox__content">
+      <img class="lightbox__img" id="lightboxImg" src="" alt="">
+      <p class="lightbox__caption" id="lightboxCaption"></p>
+      <div class="lightbox__controls">
+        <button class="lightbox__zoom" id="lightboxZoomIn" aria-label="Zoom in">&#x2795;</button>
+        <button class="lightbox__zoom" id="lightboxZoomOut" aria-label="Zoom out">&#x2796;</button>
+        <button class="lightbox__zoom" id="lightboxZoomReset" aria-label="Reset zoom">&#x21BA;</button>
+      </div>
+    </div>
+    <div class="lightbox__counter" id="lightboxCounter"></div>
+  </div>
+  <% } %>
+
+  <!-- PROJECT NAV -->
+  <section class="section section--navy project-nav-section">
+    <div class="container">
+      <div class="project-nav">
+        <a href="<%= project.github %>" target="_blank" rel="noopener" class="btn btn--gold">View on GitHub &rarr;</a>
+        <a href="/#projects" class="btn btn--outline-light">Back to All Projects</a>
+      </div>
+    </div>
+  </section>
+
+  <%- include('partials/footer') %>
+  <script src="/js/main.js"></script>
+</body>
+</html>

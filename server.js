@@ -22,7 +22,7 @@ app.use((req, res, next) => {
     "img-src 'self' data:; " +
     "media-src 'self'; " +
     "connect-src 'self'; " +
-    "frame-src 'none';"
+    "frame-src 'self';"
   );
   next();
 });

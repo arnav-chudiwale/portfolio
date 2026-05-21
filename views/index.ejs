@@ -28,7 +28,7 @@
     <div class="projects-scroll" id="projectsScroll">
       <div class="projects-scroll__track" id="projectsTrack">
         <% const completedProjects = projects.filter(p => p.tag === 'Completed'); %>
-        <% const timelineDates = [ 'Jan 2026', 'Dec 2025', 'Oct 2025' ]; %>
+        <% const timelineDates = [ 'Apr 2026', 'Jan 2026', 'Dec 2025', 'Oct 2025' ]; %>
         <% completedProjects.forEach((p, i) => { %>
         <div class="projects-scroll__dot" data-index="<%= i %>">
           <span class="projects-scroll__date"><%= timelineDates[i] || p.date %></span>
@@ -57,58 +57,6 @@
               <div class="project-card__tags">
                 <span class="tag tag--gold"><%= p.tag %></span>
                 <span class="tag tag--muted"><%= timelineDates[i] || p.date %></span>
-              </div>
-              <h3 class="project-card__title"><%= p.title %></h3>
-              <% if (p.cardIntro) { %>
-              <p class="project-card__intro"><%= p.cardIntro %></p>
-              <% } else { %>
-              <p class="project-card__desc"><%= p.oneLiner %></p>
-              <% } %>
-            </div>
-          </a>
-        </div>
-        <% }) %>
-      </div>
-    </div>
-  </section>
-
-  <!-- PROJECTS IN PROGRESS -->
-  <section class="section section--light" id="projects-wip">
-    <div class="container">
-      <h2 class="section__title">Projects In-Progress</h2>
-      <p class="section__subtitle">Currently building — check back for updates</p>
-    </div>
-    <div class="projects-scroll" id="wipScroll">
-      <div class="projects-scroll__track" id="wipTrack">
-        <% const wipProjects = projects.filter(p => p.tag === 'In Progress'); %>
-        <% wipProjects.forEach((p, i) => { %>
-        <div class="projects-scroll__dot" data-index="<%= i %>">
-          <span class="projects-scroll__date">April 2026</span>
-          <span class="projects-scroll__circle"></span>
-        </div>
-        <% }) %>
-      </div>
-      <div class="projects-scroll__cards" id="wipCards">
-        <% wipProjects.forEach((p, i) => { %>
-        <div class="projects-scroll__card fade-up" data-index="<%= i %>">
-          <a href="/project/<%= p.slug %>" class="project-card project-card--full">
-            <% if (p.cardImage) { %>
-            <div class="project-card__image">
-              <img src="<%= p.cardImage %>" alt="<%= p.title %>" loading="lazy">
-            </div>
-            <% } else if (p.hero) { %>
-            <div class="project-card__image">
-              <% if (p.hero.endsWith('.svg')) { %>
-                <img src="<%= p.hero %>" alt="<%= p.title %>" loading="lazy" style="object-fit: contain; background: #0A1628;">
-              <% } else { %>
-                <img src="<%= p.hero %>" alt="<%= p.title %>" loading="lazy">
-              <% } %>
-            </div>
-            <% } %>
-            <div class="project-card__content">
-              <div class="project-card__tags">
-                <span class="tag tag--outline"><%= p.tag %></span>
-                <span class="tag tag--muted">April 2026</span>
               </div>
               <h3 class="project-card__title"><%= p.title %></h3>
               <% if (p.cardIntro) { %>

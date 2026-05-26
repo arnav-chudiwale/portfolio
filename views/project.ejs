@@ -55,6 +55,21 @@
     </div>
   </section>
 
+  <!-- MODEL ASSUMPTIONS -->
+  <% if (project.modelAssumptions) { %>
+  <section class="section section--light case-block">
+    <div class="container">
+      <h2 class="section__title"><%= project.modelAssumptions.heading %></h2>
+      <p class="case-block__text"><%= project.modelAssumptions.intro %></p>
+      <ul class="assumptions-list fade-up">
+        <% project.modelAssumptions.items.forEach(a => { %>
+        <li class="assumptions-list__item"><%- a %></li>
+        <% }) %>
+      </ul>
+    </div>
+  </section>
+  <% } %>
+
   <!-- INTERACTIVE DEMO (embedded, right after Problem) -->
   <% if (project.hasDemo) { %>
   <section class="section section--gray case-block">
@@ -190,6 +205,18 @@
       </ul>
       <% } else { %>
       <p class="case-block__text"><%= project.method.text %></p>
+      <% } %>
+
+      <% if (project.method.diagram) { %>
+      <div class="method-diagram fade-up">
+        <figure class="project-gallery__item" data-lightbox="0">
+          <img src="<%= project.method.diagram.src %>" alt="<%= project.method.diagram.alt %>" loading="lazy">
+          <figcaption><%= project.method.diagram.caption %></figcaption>
+          <div class="project-gallery__overlay">
+            <span class="project-gallery__expand">&#x26F6; Expand</span>
+          </div>
+        </figure>
+      </div>
       <% } %>
 
       <% if (project.method.flowchart) { %>
@@ -622,12 +649,14 @@
       </div>
     </div>
   </section>
+  <% } %>
 
   <!-- LIGHTBOX MODAL -->
+  <% if (((project.images && project.images.length > 0) || (project.method && project.method.diagram)) && !project.hasDemo) { %>
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
     <div class="lightbox__backdrop"></div>
     <button class="lightbox__close" aria-label="Close">&times;</button>
-    <% if (project.images.length > 1) { %>
+    <% if (project.images && project.images.length > 1) { %>
     <button class="lightbox__nav lightbox__nav--prev" aria-label="Previous">&lsaquo;</button>
     <button class="lightbox__nav lightbox__nav--next" aria-label="Next">&rsaquo;</button>
     <% } %>

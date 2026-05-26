@@ -1084,6 +1084,16 @@ ul { list-style: none; }
   color: var(--gray-text);
   margin-bottom: 1.5rem;
 }
+.method-diagram {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0 1rem;
+}
+.method-diagram .project-gallery__item {
+  max-width: 820px;
+  width: 100%;
+}
+
 .project-gallery {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
